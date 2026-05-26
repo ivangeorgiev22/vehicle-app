@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+
+# NestJS build output
+dist/
+
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files
+.env
+.env.local
+
+# sqlite
+*.sqlite
+*.db
+
+# coverage
+coverage/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# generated
+package-lock.json
