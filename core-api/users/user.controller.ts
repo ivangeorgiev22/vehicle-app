@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, HttpCode } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import type { CreateUserDto } from "./dto/create-user.dto";
 import type { LoginUserDto } from "./dto/login-user.dto";
@@ -16,6 +16,7 @@ export class UsersController {
     // post method for log in which validates credentials
     // JSON request is parsed into a DTO object
     @Post('validate')
+    @HttpCode(200)
     validate(@Body() dto: LoginUserDto) {
         return this.usersService.validateUser(dto.username, dto.password);
     }
