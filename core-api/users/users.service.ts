@@ -27,7 +27,7 @@ export class UsersService {
       dto.firstName,
       dto.lastName,
       dto.email,
-      'ADMIN'
+      'USER'
     );
 
     return {
