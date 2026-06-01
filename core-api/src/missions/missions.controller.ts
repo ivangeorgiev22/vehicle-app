@@ -8,8 +8,8 @@ export class MissionsController {
   constructor(private missionsService: MissionsService) {}
 
   @Post()
-  create(@Body() req: CreateMissionRequest) {
-    return this.missionsService.create(req);
+  async create(@Body() req: CreateMissionRequest) {
+    return await this.missionsService.create(req);
   }
 
   @Get(':id')

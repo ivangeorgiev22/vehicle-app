@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, NotFoundException } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import type { CreateMissionRequest } from "./models/create-mission";
 import type { UpdateMission } from "./models/update-mission";
@@ -15,17 +15,29 @@ export class MissionsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
-  create(@Body() req: CreateMissionRequest) {
-    return this.missionsService.create(req);
+  async create(@Body() req: CreateMissionRequest) {
+    return await this.missionsService.create(req);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.missionsService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const mission = await this.missionsService.findOne(+id);
+
+    if(!mission) {
+      throw new NotFoundException('Mission not found')
+    }
+
+    return mission;
   }
 
   @Patch(':id/status')
-  updateStatus(@Param('id') id: string, @Body() req: UpdateMission) {
-    return this.missionsService.updateStatus(+id, req);
+  async updateStatus(@Param('id') id: string, @Body() req: UpdateMission) {
+    const mission = await this.missionsService.updateStatus(+id, req);
+
+    if(!mission) {
+      throw new NotFoundException('Mission not found');
+    }
+
+    return mission;
   }
 }
