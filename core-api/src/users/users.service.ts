@@ -27,7 +27,7 @@ export class UsersService {
       dto.firstName,
       dto.lastName,
       dto.email,
-      'USER'
+      'ADMIN'
     );
 
     return {
@@ -52,7 +52,7 @@ export class UsersService {
       return null;
     }
     // don't return hashed password to the client.
-    delete user.password;
+    user.password = undefined;
 
     return user;
   }

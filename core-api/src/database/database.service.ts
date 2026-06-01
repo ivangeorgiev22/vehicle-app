@@ -31,6 +31,15 @@ export class DatabaseService implements OnModuleInit {
         )
       `
     )
+
+    await this.db!.exec(
+      `CREATE TABLE IF NOT EXISTS missions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mission_type TEXT NOT NULL,
+        mission_status TEXT NOT NULL DEFAULT 'Created'
+        )
+      `
+    )
   }
 
   getDB() {

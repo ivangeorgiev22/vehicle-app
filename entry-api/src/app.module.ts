@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
+import { MissionsModule } from './missions/missions.module';
+import { ConfigModule } from '@nestjs/config';
 
-// load authentication into the app
+
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, ConfigModule.forRoot(), MissionsModule],
 })
 export class AppModule {}
