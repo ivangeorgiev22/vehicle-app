@@ -4,11 +4,26 @@ import axios from "axios";
 
 @Injectable()
 export class ApiClient {
-    // core api url
-    private baseUrl = "http://localhost:3000";
-    //send a request to core api to validate user
-    async validateUser (username: string, password: string) {
-        const res = await axios.post(`${this.baseUrl}/users/validate`, {username, password});
-        return res.data;
-    }
+  // core api url
+  private baseUrl = process.env.BASE_URL;
+  //send a request to core api to validate user
+  async validateUser (username: string, password: string) {
+    const res = await axios.post(`${this.baseUrl}/users/validate`, {username, password});
+    return res.data;
+  }
+
+  async createMission(mission_type: string) {
+    const res = await axios.post(`${this.baseUrl}/missions`, {mission_type});
+    return res.data;
+  }
+
+  async getMission(id: number) {
+    const res = await axios.get(`${this.baseUrl}/missions/${id}`);
+    return res.data;
+  }
+
+  async updateMissionStatus(id: number, mission_status: string) {
+    const res = await axios.patch(`${this.baseUrl}/missions/${id}/status`, {mission_status});
+    return res.data;
+  }
 }
