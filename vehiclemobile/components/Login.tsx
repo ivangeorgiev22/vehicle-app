@@ -4,10 +4,11 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Params } from "../navigation/types";
 import { useAuth } from "../context/authContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_URL } from "@env";
 
 export default function Login () {
-  // reaches into context to setUsername
-  const { setUsername } = useAuth();
+  const { setUsername, setToken, setIsAdmin } = useAuth();
   const [username, setUsernameInput] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
@@ -15,16 +16,26 @@ export default function Login () {
   const login = async () => {
     try {
       const res = await fetch(
-        'http://10.0.2.2:3001/auth/login',
+        `${API_URL}/auth/login`,
         {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({username,password})
         }
       )
+      const data = await res.json();
 
       if (res.ok) {
-        setUsername(username); // saves the username into context based on input for use elsewhere
+        //save for in memory use.
+        setUsername(username);
+        setToken(data.accessToken);
+        setIsAdmin(data.isAdmin);
+
+        // save for persistence
+        await AsyncStorage.setItem('token', data.accessToken);
+        await AsyncStorage.setItem('isAdmin', JSON.stringify(data.isAdmin));
+
+
         navigation.navigate('Home')
         setUsernameInput('');
         setPassword('');

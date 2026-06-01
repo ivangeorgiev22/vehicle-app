@@ -3,6 +3,10 @@ import { createContext, useContext, useState } from "react";
 type AuthContextType = {
   username: string;
   setUsername: (username: string) => void;
+  token: string;
+  setToken: (token: string) => void;
+  isAdmin: boolean;
+  setIsAdmin: (isAmdin: boolean) => void;
 };
 // createContext creates a global container. default value null beofore it's set up by the provider
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -12,10 +16,12 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode}) {
   // the state we want to manage globally
   const [username, setUsername] = useState('');
+  const [token, setToken] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   return (
-    // any component will be able to access username or setUsername
-    <AuthContext.Provider value={{username, setUsername}}>
+    // any component will be able to access those
+    <AuthContext.Provider value={{username, setUsername, token, setToken, isAdmin, setIsAdmin}}>
       {children}
     </AuthContext.Provider>
   )

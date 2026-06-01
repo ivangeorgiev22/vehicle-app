@@ -22,10 +22,13 @@ export class AuthService {
     //generate token
     const token = this.jwtService.sign(payload);
     
-    // return the token and the user
     return {
       accessToken: token,
-      user
+      isAdmin: user.role === 'ADMIN',
+      user: {
+        id: user.id,
+        username: user.username
+      }
     };
   }
 }
