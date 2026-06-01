@@ -32,3 +32,25 @@ Thumbs.db
 
 # generated
 package-lock.json
+
+# React Native
+vehiclemobile/node_modules/
+vehiclemobile/.gradle/
+vehiclemobile/android/.gradle/
+vehiclemobile/android/build/
+vehiclemobile/android/app/build/
+vehiclemobile/android/.cxx/
+vehiclemobile/android/app/.cxx/
+vehiclemobile/ios/build/
+vehiclemobile/ios/Pods/
+vehiclemobile/.expo/
+vehiclemobile/.metro/
+vehiclemobile/coverage/
+
+# React Native env
+vehiclemobile/.env
+vehiclemobile/.env.local
+
+# React Native generated
+vehiclemobile/android/app/src/main/assets/index.android.bundle
+vehiclemobile/android/app/src/main/assets/index.android.bundle.map
