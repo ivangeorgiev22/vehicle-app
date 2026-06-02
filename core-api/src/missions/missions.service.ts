@@ -2,10 +2,11 @@ import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
 import { CreateMissionRequest } from "./models/CreateMissionRequest";
 import { MissionStatus} from './models/UpdateMissionStatus';
+import { JobsService } from "../jobs/jobs.service";
 
 @Injectable()
 export class MissionsService {
-  constructor(private dbService: DatabaseService) {}
+  constructor(private dbService: DatabaseService, private jobsService: JobsService) {}
 
   async create(req: CreateMissionRequest) {
     const db = this.dbService.getDB();
@@ -13,6 +14,8 @@ export class MissionsService {
     const res = await db.run(
       `INSERT INTO missions (mission_type) VALUES (?)`, req.mission_type
     );
+
+    await this.jobsService.createJob(Number(res.lastID), req.mission_type)
 
     return db.get(
       `SELECT * FROM missions WHERE id = ?`, res.lastID
@@ -30,7 +33,17 @@ export class MissionsService {
       return null;
     }
 
-    return mission;
+    const jobs = await db.all(
+      `SELECT * FROM jobs WHERE mission_id = ?`, id
+    )
+
+    return {
+      ...mission,
+      jobs: jobs.map(job => ({
+        ...job,
+        tasks: JSON.parse(job.tasks)
+      })),
+    };
   }
 
   async updateStatus(id: number, req: MissionStatus) {

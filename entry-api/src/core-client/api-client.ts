@@ -26,4 +26,14 @@ export class ApiClient {
     const res = await axios.patch(`${this.baseUrl}/missions/${id}/status`, {mission_status});
     return res.data;
   }
+
+  async updateJobStatus(id: number, job_status: string) {
+    const res = await axios.patch(`${this.baseUrl}/jobs/${id}/status`, {job_status});
+    return res.data;
+  }
+
+  async updateTaskStatus(id: number, key: string, task_status: string) {
+    const res = await axios.patch(`${this.baseUrl}/jobs/${id}/task/${key}/status`, {task_status});
+    return res.data;
+  }
 }
