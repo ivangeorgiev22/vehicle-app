@@ -36,4 +36,14 @@ export class ApiClient {
     const res = await axios.patch(`${this.baseUrl}/jobs/${id}/task/${key}/status`, {task_status});
     return res.data;
   }
+
+  async getBacklogJobs() {
+    const res = await axios.get(`${this.baseUrl}/jobs`);
+    return res.data;
+  }
+
+  async getJobById(id: number) {
+    const res = await axios.get(`${this.baseUrl}/jobs/${id}`);
+    return res.data;
+  }
 }

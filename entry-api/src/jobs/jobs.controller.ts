@@ -1,4 +1,4 @@
-import { Controller, Param, Body, Patch, UseGuards } from "@nestjs/common";
+import { Controller, Param, Body, Patch, UseGuards, Get } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { RolesGuard } from "../roles/roles.guard";
 import { Roles } from "../roles/roles.decorator";
@@ -12,16 +12,27 @@ export class JobsController {
   constructor(private jobsService: JobsService) {}
 
   @Patch(':id/status')
-  @UseGuards(RolesGuard)
-  @Roles('ADMIN')
   async updateStatus(@Param('id') id: string, @Body() req: UpdateJobStatus) {
-    return this.jobsService.updateStatus(+id, req);
+    const job = await this.jobsService.updateStatus(+id, req);
+    return job;
   }
 
   @Patch(':id/task/:key/status')
-  @UseGuards(RolesGuard)
-  @Roles('ADMIN')
   async updateTaskStatus(@Param('id') id: string, @Param('key') key: string, @Body() req: Pick<Task, 'task_status'>) {
-    return this.jobsService.updateTaskStatus(+id, key, req);
+    const task = this.jobsService.updateTaskStatus(+id, key, req);
+    return task;
   }
+
+  @Get()
+  async getBacklogJobs() {
+    const jobs = await this.jobsService.getBacklogJobs();
+    return jobs;
+  };
+
+  @Get(':id')
+  async getJobById(@Param('id') id: string) {
+    const job = await this.jobsService.getJobById(+id);
+    return job;
+  } 
+
 }

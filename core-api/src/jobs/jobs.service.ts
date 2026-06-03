@@ -3,13 +3,14 @@ import { DatabaseService } from "../database/database.service";
 import { mission_templates } from "./job-templates";
 import { UpdateJobStatus } from "./interfaces/UpdateJobStatus";
 import { Task } from "./interfaces/job.interface";
+import { Job } from "./interfaces/job.interface";
 
 
 @Injectable()
 export class JobsService {
   constructor (private dbService: DatabaseService) {}
 
-  async createJob (mission_id: number, mission_type: string) {
+  async createJob (mission_id: number, mission_type: string): Promise<void> {
     const db = this.dbService.getDB();
     const jobs = mission_templates[mission_type];
 
@@ -27,7 +28,7 @@ export class JobsService {
     }
   }
 
-  async updateJobStatus (id: number, req: UpdateJobStatus) {
+  async updateJobStatus (id: number, req: UpdateJobStatus): Promise<Job | null | undefined> {
     const db = this.dbService.getDB();
     const job = await db.get(`SELECT * FROM jobs WHERE id = ?`, id);
 
@@ -43,7 +44,7 @@ export class JobsService {
     return db.get(`SELECT * FROM jobs WHERE id = ?`, id);
   }
 
-  async updateTaskStatus(id: number, key: string, task_status: string) {
+  async updateTaskStatus(id: number, key: string, task_status: string): Promise<Job | null> {
     const db = this.dbService.getDB();
     const job = await db.get(`SELECT * FROM jobs WHERE id = ?`, id);
 
@@ -71,6 +72,29 @@ export class JobsService {
     return {
       ...updatedJob,
       tasks: JSON.parse(updatedJob.tasks)
+    }
+  }
+
+  async backlogJobs(): Promise<Job[]> {
+    const db = this.dbService.getDB();
+    const jobs = await db.all(`SELECT * FROM jobs WHERE job_status = 'Backlog'`);
+
+    return jobs.map(job => ({
+      ...job,
+      tasks: JSON.parse(job.tasks)
+    }));
+  }
+
+  async getJobById(id: number): Promise<Job | null> {
+    const db = this.dbService.getDB();
+    const job = await db.get(
+      `SELECT * FROM jobs WHERE id = ?`, id
+    )
+    if (!job) return null;
+
+    return {
+      ...job,
+      tasks: JSON.parse(job.tasks)
     }
   }
 }

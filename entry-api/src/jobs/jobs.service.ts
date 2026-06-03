@@ -14,4 +14,12 @@ export class JobsService {
   updateTaskStatus(id: number, key: string, req: Pick<Task, 'task_status'>) {
     return this.coreApi.updateTaskStatus(id,key, req.task_status);
   }
+
+  getBacklogJobs() {
+    return this.coreApi.getBacklogJobs();
+  }
+
+  getJobById(id: number) {
+    return this.coreApi.getJobById(id);
+  }
 }

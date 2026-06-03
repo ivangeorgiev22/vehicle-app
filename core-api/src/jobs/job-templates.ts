@@ -7,6 +7,16 @@ export const mission_templates = {
           key: 'clean-1',
           description: 'Wash the vehicle',
           task_status: 'Waiting'
+        },
+        {
+          key: 'clean-2',
+          description: 'Dry the vehicle',
+          task_status: 'Waiting'
+        },
+        {
+          key: 'clean-3',
+          description: 'Machine polish the vehicle',
+          task_status: 'Waiting'
         }
       ]
     }
