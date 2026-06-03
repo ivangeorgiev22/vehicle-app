@@ -1,7 +1,5 @@
 import { Controller, Param, Body, Patch, UseGuards, Get } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
-import { RolesGuard } from "../roles/roles.guard";
-import { Roles } from "../roles/roles.decorator";
 import { JobsService } from "./jobs.service";
 import type { UpdateJobStatus } from "./models/UpdateJobStatus";
 import { Task } from "./models/UpdateTaskStatus";
