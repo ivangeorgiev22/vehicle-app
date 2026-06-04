@@ -7,11 +7,11 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { Params } from "../navigation/types";
 
-type MissionType = 'Cleaning' | 'Fly Doctor' | 'Maintenance';
+type MissionType = 'Cleaning' | 'Fly Doctor' | 'Maintenance' | '';
 
 export default function Home () {
   const { username, token, isAdmin, userId } = useAuth();
-  const [missionType, setMissionType] = useState<MissionType>('Cleaning');
+  const [missionType, setMissionType] = useState<MissionType>('');
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
 
   const createMission = async () => {
@@ -24,6 +24,7 @@ export default function Home () {
 
       if(res.ok) {
         Alert.alert('Mission created!')
+        setMissionType('')
       } else {
         Alert.alert(`Error: ${res.status}`)
       }
@@ -46,6 +47,7 @@ export default function Home () {
             onValueChange={(value) => setMissionType(value)}
             style={styles.picker}
           >
+            <Picker.Item label="Select mission type" value='' />
             <Picker.Item label="Cleaning" value="Cleaning" />
             <Picker.Item label="Fly Doctor" value="Fly Doctor" />
             <Picker.Item label="Maintenance" value="Maintenance" />
@@ -64,7 +66,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 25,
     textAlign: 'center',
-    marginBottom: 26
+    marginBottom: 26,
   },
   container: {
     flexDirection: 'column',
