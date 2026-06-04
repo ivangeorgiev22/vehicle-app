@@ -3,12 +3,13 @@ import { DatabaseService } from "../database/database.service";
 import { CreateMissionRequest } from "./models/CreateMissionRequest";
 import { MissionStatus} from './models/UpdateMissionStatus';
 import { JobsService } from "../jobs/jobs.service";
+import { Mission, MissionWithJobs } from "./interfaces/mission-interface";
 
 @Injectable()
 export class MissionsService {
   constructor(private dbService: DatabaseService, private jobsService: JobsService) {}
 
-  async create(req: CreateMissionRequest) {
+  async create(req: CreateMissionRequest): Promise<Mission | undefined> {
     const db = this.dbService.getDB();
 
     const res = await db.run(
@@ -23,7 +24,7 @@ export class MissionsService {
 
   };
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<MissionWithJobs | null> {
     const db = this.dbService.getDB();
     const mission = await db.get(
       `SELECT * FROM missions WHERE id = ?`, id
@@ -46,7 +47,7 @@ export class MissionsService {
     };
   }
 
-  async updateStatus(id: number, req: MissionStatus) {
+  async updateStatus(id: number, req: MissionStatus): Promise<Mission | null | undefined> {
     const db = this.dbService.getDB();
     // check if mission exists
     const mission = await db.get(`SELECT * FROM missions WHERE id = ?`, id);

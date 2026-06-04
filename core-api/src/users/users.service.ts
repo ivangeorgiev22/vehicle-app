@@ -2,13 +2,14 @@ import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
+import { User, CreatedUser } from "./interfaces/user-interface";
 
 @Injectable()
 export class UsersService {
   constructor(private dbService: DatabaseService) {}
 
   //business logic for user registration
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto): Promise<CreatedUser | undefined> {
     const db = this.dbService.getDB();
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const res = await db.run(
@@ -32,12 +33,12 @@ export class UsersService {
 
     return {
       //sqlite returns id of inserted row and the username
-      id: res.lastID,
+      id: res.lastID!,
       username: dto.username
     };
   }
   //business logic for when an existing user logs in
-  async validateUser (username: string, password: string) {
+  async validateUser (username: string, password: string): Promise<User | null> {
     const db = this.dbService.getDB();
 
     const user = await db.get(`SELECT * FROM users WHERE username = ?`, username);

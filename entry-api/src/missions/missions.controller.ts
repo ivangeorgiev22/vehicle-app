@@ -5,6 +5,7 @@ import type { UpdateMission } from "./models/update-mission";
 import { MissionsService } from "./missions.service";
 import { RolesGuard } from "../roles/roles.guard";
 import { Roles } from "../roles/roles.decorator";
+import { Mission, MissionWithJobs } from "./interfaces/missions-interface";
 
 
 @Controller('missions')
@@ -15,12 +16,12 @@ export class MissionsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
-  async create(@Body() req: CreateMissionRequest) {
+  async create(@Body() req: CreateMissionRequest): Promise<Mission> {
     return await this.missionsService.create(req);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<MissionWithJobs> {
     const mission = await this.missionsService.findOne(+id);
 
     if(!mission) {
@@ -31,7 +32,7 @@ export class MissionsController {
   }
 
   @Patch(':id/status')
-  async updateStatus(@Param('id') id: string, @Body() req: UpdateMission) {
+  async updateStatus(@Param('id') id: string, @Body() req: UpdateMission): Promise<Mission> {
     const mission = await this.missionsService.updateStatus(+id, req);
 
     if(!mission) {

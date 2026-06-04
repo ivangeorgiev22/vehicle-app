@@ -4,6 +4,7 @@ import type { CreateUserDto } from "./dto/create-user.dto";
 import type { LoginUserDto } from "./dto/login-user.dto";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { UsersImageService } from "./users-image.service";
+import { User, CreatedUser } from "./interfaces/user-interface";
 
 //http layer, handles incoming requests
 //controller is the base route with /users 
@@ -13,14 +14,14 @@ export class UsersController {
     constructor(private usersService: UsersService, private usersImageService: UsersImageService) {}
     // Post method for registering a user 
     @Post()
-    create(@Body() dto: CreateUserDto) {
+    create(@Body() dto: CreateUserDto): Promise<CreatedUser | undefined> {
       return this.usersService.create(dto);
     }
     // post method for log in which validates credentials
     // JSON request is parsed into a DTO object
     @Post('validate')
     @HttpCode(200)
-    validate(@Body() dto: LoginUserDto) {
+    validate(@Body() dto: LoginUserDto): Promise<User | null> {
       return this.usersService.validateUser(dto.username, dto.password);
     }
 
