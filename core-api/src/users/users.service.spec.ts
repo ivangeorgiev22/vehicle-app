@@ -122,7 +122,7 @@ describe("UsersService", () => {
 
       const res = await service.validateUser('john', 'correctpassword');
 
-      expect(res).not.toHaveProperty('password');
+      expect(res).toHaveProperty('password', undefined);
       expect(res).toEqual({ id: 1, username: 'john', role: 'USER' });
     });
   });

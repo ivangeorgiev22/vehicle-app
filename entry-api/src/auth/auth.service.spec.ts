@@ -64,7 +64,11 @@ describe('AuthService', () => {
 
       expect(res).toEqual({
         accessToken: 'jwt-token',
-        user: mockUser
+        isAdmin: false,
+        user: {
+          id: 1,
+          username: 'john'
+        }
       });
     });
   });

@@ -1,6 +1,8 @@
 import { ApiClient } from "./api-client";
 import axios from "axios";
 
+process.env.BASE_URL = 'http://localhost:3000'
+
 jest.mock('axios', () => ({
   post: jest.fn()
 }));

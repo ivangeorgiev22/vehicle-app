@@ -4,4 +4,5 @@ export type Params = {
   Home: undefined;
   Jobs: undefined;
   'Job Details': { id: number };
+  Profile: {id: number};
 }

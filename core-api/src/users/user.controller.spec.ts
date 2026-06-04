@@ -1,6 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { UsersController } from "./user.controller";
 import { UsersService } from "./users.service";
+import { UsersImageService } from "./users-image.service";
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -11,6 +12,12 @@ describe('UsersController', () => {
     validateUser: jest.fn()
   };
 
+  //mock UsersImageService
+  const mockUsersImageService = {
+    uploadImage: jest.fn(),
+    getImage: jest.fn(),
+  }
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
@@ -18,6 +25,10 @@ describe('UsersController', () => {
         {
           provide: UsersService,
           useValue: mockUsersService
+        },
+        {
+          provide: UsersImageService,
+          useValue: mockUsersImageService
         }
       ]
     }).compile();

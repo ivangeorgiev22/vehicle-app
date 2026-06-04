@@ -8,7 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "@env";
 
 export default function Login () {
-  const { setUsername, setToken, setIsAdmin, } = useAuth();
+  const { setUsername, setToken, setIsAdmin, setUserId } = useAuth();
   const [username, setUsernameInput] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
@@ -30,6 +30,7 @@ export default function Login () {
         setUsername(username);
         setToken(data.accessToken);
         setIsAdmin(data.isAdmin);
+        setUserId(data.user.id);
 
         // save for persistence
         await AsyncStorage.setItem('token', data.accessToken);

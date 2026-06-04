@@ -1,14 +1,18 @@
-import { View, Text, StyleSheet, Button, Alert } from "react-native";
+import { View, Text, StyleSheet, Button, Alert, Pressable } from "react-native";
 import { useAuth } from "../context/authContext";
 import { useState } from "react";
 import { Picker } from "@react-native-picker/picker"
 import { API_URL } from "@env";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation } from "@react-navigation/native";
+import { Params } from "../navigation/types";
 
 type MissionType = 'Cleaning' | 'Fly Doctor' | 'Maintenance';
 
 export default function Home () {
-  const { username, token, isAdmin } = useAuth();
+  const { username, token, isAdmin, userId } = useAuth();
   const [missionType, setMissionType] = useState<MissionType>('Cleaning');
+  const navigation = useNavigation<NativeStackNavigationProp<Params>>();
 
   const createMission = async () => {
     try {
@@ -30,6 +34,9 @@ export default function Home () {
 
   return (
     <View style={styles.container}>
+      <Pressable onPress={() => navigation.navigate('Profile', {id: userId}) }>
+        <Text style={styles.profileTitle}>Profile</Text>
+      </Pressable>
       <Text style={styles.title}>Hello, {username} </Text>
       {isAdmin && (
         <>
@@ -60,7 +67,6 @@ const styles = StyleSheet.create({
     marginBottom: 26
   },
   container: {
-    flex: 1,
     flexDirection: 'column',
     justifyContent: 'center',
     padding: 20
@@ -73,5 +79,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     borderBottomColor: '#060606',
     borderBottomWidth: 1
+  },
+  profileTitle: {
+    fontSize: 17,
+    width: 60,
   }
 })

@@ -1,6 +1,7 @@
 //communication with core api
 import { Injectable } from "@nestjs/common";
 import axios from "axios";
+import FormData from "form-data";
 
 @Injectable()
 export class ApiClient {
@@ -44,6 +45,24 @@ export class ApiClient {
 
   async getJobById(id: number) {
     const res = await axios.get(`${this.baseUrl}/jobs/${id}`);
+    return res.data;
+  }
+
+  async uploadImage(id: number, file: Express.Multer.File): Promise<{image_url: string}> {
+    const formData = new FormData(); //create a new formData instance
+    
+    formData.append('image', file.buffer, {
+      filename: file.originalname,
+      contentType: file.mimetype
+    })
+    const res = await axios.post(`${this.baseUrl}/users/${id}/image`, formData, {
+      headers: { ...formData.getHeaders()}
+    });
+    return res.data;
+  }
+
+  async getImage (id: number): Promise<{image_url: string | null}> {
+    const res = await axios.get(`${this.baseUrl}/users/${id}/image`);
     return res.data;
   }
 }

@@ -13,7 +13,7 @@ interface Job {
 }
 
 export default function Jobs() {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
 
@@ -43,6 +43,9 @@ export default function Jobs() {
   }, [])
   return (
     <View style={styles.container}>
+       <Pressable onPress={() => navigation.navigate('Profile', {id: userId }) }>
+        <Text style={styles.profileTitle}>Profile</Text>
+      </Pressable>
       <Text style={styles.title}>Jobs</Text>
       <FlatList 
         data={jobs} 
@@ -78,5 +81,8 @@ const styles= StyleSheet.create({
   },
   jobTitle: {
     fontSize: 15
+  },
+  profileTitle: {
+    fontSize: 20
   }
 })
