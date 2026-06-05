@@ -5,6 +5,7 @@ import { API_URL } from "@env";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Params } from "../navigation/types";
+import { io, Socket } from "socket.io-client";
 
 interface Job {
   id: number;
@@ -17,30 +18,29 @@ export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
 
-  const fetchJobs = async () => {
-    try {
-      const res = await fetch(`${API_URL}/jobs`, {
-        headers: {'Authorization': `Bearer ${token}`}
-      });
-
-      if(res.ok) {
-        const data = await res.json();
-        setJobs(data);
-      }
-    } catch (error) {
-      console.log('Error', error);
-    }
-
-  }
   useEffect(() => {
-    fetchJobs();
+   const socket: Socket = io(API_URL, {
+    auth: {token}
+   });
+   //upon connection, server sends all backlog jobs
+   socket.on('connect', () => {
+    console.log('Connected');
+   });
+   //listens for updates from server
+   socket.on('jobs:backlog', (data: Job[]) => {
+    setJobs(data);
+   });
+   //disconnects
+   socket.on('disconnect', () => {
+    console.log('Disconnected');
+   });
 
-    const interval = setInterval(() => {
-      fetchJobs();
-    }, 30000);
-    //clear interval once compoment unmounts
-    return () => clearInterval(interval);
+   //on screen unmount clean up
+   return () => {
+    socket.disconnect();
+   };
   }, [])
+
   return (
     <View style={styles.container}>
        <Pressable onPress={() => navigation.navigate('Profile', {id: userId }) }>
