@@ -2,9 +2,10 @@ import { Module } from "@nestjs/common";
 import { MissionsController } from "./missions.controller";
 import { MissionsService } from "./missions.service";
 import { DatabaseModule } from "../database/database.module";
+import { JobsModule } from "../jobs/jobs.module";
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, JobsModule],
   providers: [MissionsService],
   controllers: [MissionsController]
 

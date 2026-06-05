@@ -1,12 +1,13 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ApiClient } from "../core-client/api-client";
 import { JwtService } from "@nestjs/jwt";
+import { AuthResponse } from "./interfaces/auth-interface";
 
 @Injectable()
 export class AuthService {
   constructor(private coreApi: ApiClient, private jwtService: JwtService) {}
   // handles login request
-  async login (username: string, password: string) {
+  async login (username: string, password: string): Promise<AuthResponse> {
     //validates user via core api
     const user = await this.coreApi.validateUser(username, password);
     // if user is invalid throw an error
@@ -22,10 +23,13 @@ export class AuthService {
     //generate token
     const token = this.jwtService.sign(payload);
     
-    // return the token and the user
     return {
       accessToken: token,
-      user
+      isAdmin: user.role === 'ADMIN',
+      user: {
+        id: user.id,
+        username: user.username
+      }
     };
   }
 }

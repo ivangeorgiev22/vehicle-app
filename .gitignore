@@ -15,10 +15,6 @@ yarn-error.log*
 .env
 .env.local
 
-# sqlite
-*.sqlite
-*.db
-
 # coverage
 coverage/
 

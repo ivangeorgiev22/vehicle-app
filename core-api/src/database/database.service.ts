@@ -40,6 +40,18 @@ export class DatabaseService implements OnModuleInit {
         )
       `
     )
+
+    await this.db.exec(
+      `CREATE TABLE IF NOT EXISTS jobs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mission_id INTEGER,
+        job_title TEXT NOT NULL,
+        job_status TEXT NOT NULL DEFAULT 'Backlog',
+        tasks TEXT NOT NULL DEFAULT '[]',
+        FOREIGN KEY (mission_id) REFERENCES missions(id)
+        )
+      `
+    )
   }
 
   getDB() {
