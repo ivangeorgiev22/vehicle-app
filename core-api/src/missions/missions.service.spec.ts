@@ -1,0 +1,139 @@
+import { TestingModule, Test } from "@nestjs/testing";
+import { MissionsService } from "./missions.service";
+import { DatabaseService } from "../database/database.service";
+import { JobsService } from "../jobs/jobs.service";
+
+describe('MissionsService', () => {
+  let service: MissionsService;
+
+ const mockDb = {
+  run: jest.fn(),
+  get: jest.fn(),
+  all: jest.fn()
+ };
+ const mockDbService = {
+  getDB: jest.fn().mockReturnValue(mockDb)
+ };
+ const mockJobsService = {
+  createJob: jest.fn()
+ };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        MissionsService,
+        {
+          provide: DatabaseService,
+          useValue: mockDbService
+        },
+        {
+          provide: JobsService,
+          useValue: mockJobsService
+        }
+      ]
+    }).compile();
+    service = module.get<MissionsService>(MissionsService);
+  });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('create()', () => {
+    it('Inserts a mission with correct type', async () => {
+      mockDb.run.mockResolvedValue({lastID: 1});
+      mockDb.get.mockResolvedValue({id: 1, mission_type: 'Cleaning', mission_status: 'Created'});
+      mockJobsService.createJob.mockResolvedValue(undefined);
+
+      await service.create({mission_type: 'Cleaning'});
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO missions'), 'Cleaning'
+      );
+    });
+
+    it('Calls jobsService with mission id and type', async () => {
+      mockDb.run.mockResolvedValue({lastID: 1});
+      mockDb.get.mockResolvedValue({id: 1, mission_type: 'Cleaning', mission_status: 'Created'});
+      mockJobsService.createJob.mockResolvedValue(undefined);
+
+      await service.create({mission_type: 'Cleaning'});
+      expect(mockJobsService.createJob).toHaveBeenCalledWith(1, 'Cleaning');
+    });
+
+    it('Returns created mission', async () => {
+      const mockMission = {id: 1, mission_type: 'Cleaning', mission_status: 'Created'};
+      mockDb.run.mockResolvedValue({lastID: 1});
+      mockDb.get.mockResolvedValue(mockMission);
+      mockJobsService.createJob.mockResolvedValue(undefined);
+
+      const res = await service.create({mission_type: 'Cleaning'});
+      expect(res).toEqual(mockMission);
+    });
+  });
+
+  describe('findOne()', () => {
+    it('Returns mission with jobs and tasks', async () => {
+      const mockMission = {
+        id: 1,
+        mission_type: 'Cleaning',
+        mission_status: 'Created'
+      };
+      
+      const mockJob = [
+        {
+          id: 1,
+          mission_id: 1,
+          job_title: 'Exterior Clean',
+          job_status: 'Backlog',
+          tasks: JSON.stringify([
+            {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}
+          ])
+        }
+      ];
+
+      mockDb.get.mockResolvedValue(mockMission);
+      mockDb.all.mockResolvedValue(mockJob);
+
+      const res = await service.findOne(1);
+      expect(res).toEqual({
+        id: 1,
+        mission_type: 'Cleaning',
+        mission_status: 'Created',
+        jobs: [
+          {
+            id: 1,
+            mission_id: 1,
+            job_title: 'Exterior Clean',
+            job_status: 'Backlog',
+            tasks: [
+              {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}
+            ]
+          }
+        ]
+      });
+    });
+  });
+
+  describe('updateStatus()', () => {
+    it('Updates mission status', async () => {
+      const mockMission = {
+        id: 1,
+        mission_type: 'Cleaning',
+        mission_status: 'Created'
+      };
+      const updatedMission = {...mockMission, mission_status: 'In progress'};
+
+      mockDb.get
+      .mockResolvedValue(mockMission)
+      .mockResolvedValue(updatedMission);
+
+      mockDb.run.mockResolvedValue({});
+
+      const res = await service.updateStatus(1, {mission_status: 'In progress'});
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE missions SET mission_status'),
+        'In progress', 1
+      );
+      expect(res).toEqual(updatedMission);
+    })
+  })
+});
