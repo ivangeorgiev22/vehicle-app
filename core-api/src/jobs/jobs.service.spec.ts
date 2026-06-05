@@ -34,7 +34,16 @@ describe('JobsService', () => {
   describe('createJob()', () => {
     it('Should create a job for each mission type', async () => {
       mockDb.run.mockResolvedValue({});
+
       await service.createJob(1, 'Cleaning');
+      expect(mockDb.run).toHaveBeenCalledTimes(1);
+      jest.clearAllMocks();
+
+      await service.createJob(2, 'Fly Doctor');
+      expect(mockDb.run).toHaveBeenCalledTimes(1);
+      jest.clearAllMocks();
+
+      await service.createJob(3, 'Maintenance');
       expect(mockDb.run).toHaveBeenCalledTimes(1);
     });
 
