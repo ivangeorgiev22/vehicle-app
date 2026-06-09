@@ -20,6 +20,5 @@ const coreStack = new CoreStack(app, 'CoreStack', {
 new EntryStack(app, 'EntryStack', {
   env,
   stackName: 'vehicle-app-entry-stack',
-  api: coreStack.api,
-  coreApiUrl: coreStack.apiUrl
+  coreApiUrl: coreStack.coreApiUrl
 });

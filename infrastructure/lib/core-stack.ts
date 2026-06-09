@@ -7,8 +7,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 
 export class CoreStack extends Stack {
-  public readonly api: apigateway.RestApi;
-  public readonly apiUrl: string;
+  public readonly coreApiUrl: string;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope,id,props);
@@ -66,18 +65,13 @@ export class CoreStack extends Stack {
     });
 
     //API Gateway for request routing
-    this.api = new apigateway.RestApi(this, 'VehicleAppApi', {
-      restApiName: 'vehicle-app-stage',
-      description: 'Vehicle App Stage API',
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ['Content-Type','Authorization']
-      }
+    const api = new apigateway.RestApi(this, 'CoreVehicleAppApi', {
+      restApiName: 'core-vehicle-app-stage',
+      description: 'Core Vehicle App Stage API',
     });
     
     const coreApiIntegration = new apigateway.LambdaIntegration(coreApiLambda, {proxy: true});
-    const apiResource = this.api.root.addResource('api');
+    const apiResource = api.root.addResource('api');
     
     //users
     const coreUsers = apiResource.addResource('users');
@@ -110,7 +104,7 @@ export class CoreStack extends Stack {
     coreJobTaskStatus.addMethod('PATCH', coreApiIntegration);
     
     // export api url for entry stack
-    this.apiUrl = this.api.url;
+    this.coreApiUrl = api.url;
 
     //grant lambda permission to access tables
     usersTable.grantReadWriteData(coreApiLambda);
@@ -119,7 +113,7 @@ export class CoreStack extends Stack {
     imagesBucket.grantReadWrite(coreApiLambda);
 
     new CfnOutput(this, 'ApiUrl', {
-      value: this.api.url,
+      value: api.url,
       description: 'API Gateway URL'
     });
   }

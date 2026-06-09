@@ -18,27 +18,42 @@ export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
 
-  useEffect(() => {
-   const socket: Socket = io(API_URL, {
-    auth: {token}
-   });
-   //upon connection, server sends all backlog jobs
-   socket.on('connect', () => {
-    console.log('Connected');
-   });
-   //listens for updates from server
-   socket.on('jobs:backlog', (data: Job[]) => {
-    setJobs(data);
-   });
-   //disconnects
-   socket.on('disconnect', () => {
-    console.log('Disconnected');
-   });
+  const fetchJobs = async () => {
+    try {
+      const res = await fetch(`${API_URL}/jobs`, {
+        headers: {'Authorization': `Bearer ${token}`}
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setJobs(data);
+      }
+    } catch (error) {
+      console.log('Error', error);
+    }
+  }
 
-   //on screen unmount clean up
-   return () => {
-    socket.disconnect();
-   };
+  useEffect(() => {
+    fetchJobs();
+  //  const socket: Socket = io(API_URL, {
+  //   auth: {token}
+  //  });
+  //  //upon connection, server sends all backlog jobs
+  //  socket.on('connect', () => {
+  //   console.log('Connected');
+  //  });
+  //  //listens for updates from server
+  //  socket.on('jobs:backlog', (data: Job[]) => {
+  //   setJobs(data);
+  //  });
+  //  //disconnects
+  //  socket.on('disconnect', () => {
+  //   console.log('Disconnected');
+  //  });
+
+  //  //on screen unmount clean up
+  //  return () => {
+  //   socket.disconnect();
+  //  };
   }, [])
 
   return (

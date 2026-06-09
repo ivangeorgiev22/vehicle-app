@@ -71,7 +71,10 @@ export default function Profile() {
       <Text style={styles.title}>Profile</Text>
 
       {image ? (
-        <Image source={{uri: image}} style={styles.img}/>
+        <Image 
+          source={{uri: image}} style={styles.img} 
+          onError={(e) => console.log('Image error:', e.nativeEvent.error)}
+          onLoad={() => console.log('Image loaded successfully')}/>
       ) : (
         <View style={styles.placeholder}>
           <Text style={styles.placeholderTxt}>No image</Text>

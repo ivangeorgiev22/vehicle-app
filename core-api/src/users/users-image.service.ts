@@ -13,7 +13,9 @@ export class UsersImageService {
 
   //create a new instance of the s3client listing required info
   private s3 = new S3Client({
-    region: process.env.AWS_REGION!
+    region: process.env.AWS_REGION!,
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED'
   });
   //express.multer.file - type of uploaded file after it's proccessed by the middleware
   async uploadImage(userId: string, file: Express.Multer.File): Promise<{image_url:string}> {
@@ -68,7 +70,7 @@ export class UsersImageService {
         Bucket: process.env.S3_BUCKET_NAME,
         Key: res.Item.image_url
       }),
-      {expiresIn: 3600}
+      {expiresIn: 3600, unhoistableHeaders: new Set(['x-amz-checksum-mode'])}
     )
 
     return {image_url: signedUrl};

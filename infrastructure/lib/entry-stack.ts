@@ -1,11 +1,10 @@
-import {Stack, StackProps, Duration} from 'aws-cdk-lib';
+import {Stack, StackProps, Duration, CfnOutput} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as path from 'path';
 
 interface EntryStackProps extends StackProps {
-  api: apigateway.RestApi;
   coreApiUrl: string;
 }
 
@@ -26,15 +25,25 @@ export class EntryStack extends Stack {
       }
     });
 
+    const api = new apigateway.RestApi(this, 'EntryVehicleAppApi', {
+      restApiName: 'entry-vehicle-app-api',
+      description: 'Entry Vehicle App API',
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowHeaders: ['Content-Type', 'Authorization']
+      }
+    });
+
     const entryApiIntegration = new apigateway.LambdaIntegration(entryApiLambda, {proxy: true});
 
     //auth
-    const entryAuth = props.api.root.addResource('auth');
+    const entryAuth = api.root.addResource('auth');
     const entryLogin = entryAuth.addResource('login');
     entryLogin.addMethod('POST', entryApiIntegration);
 
     //missions
-    const entryMissions = props.api.root.addResource('missions');
+    const entryMissions = api.root.addResource('missions');
     entryMissions.addMethod('POST', entryApiIntegration);
     const entryMission = entryMissions.addResource('{id}');
     entryMission.addMethod('GET', entryApiIntegration);
@@ -42,7 +51,7 @@ export class EntryStack extends Stack {
     entryMissionStatus.addMethod('PATCH', entryApiIntegration);
 
     //jobs
-    const entryJobs = props.api.root.addResource('jobs');
+    const entryJobs = api.root.addResource('jobs');
     entryJobs.addMethod('GET', entryApiIntegration);
     const entryJob = entryJobs.addResource('{id}');
     entryJob.addMethod('GET', entryApiIntegration);
@@ -54,10 +63,15 @@ export class EntryStack extends Stack {
     entryJobTaskStatus.addMethod('PATCH', entryApiIntegration);
 
     //users
-    const entryUsers = props.api.root.addResource('users');
+    const entryUsers = api.root.addResource('users');
     const entryUser = entryUsers.addResource('{id}');
     const entryUserImage = entryUser.addResource('image');
     entryUserImage.addMethod('POST', entryApiIntegration);
     entryUserImage.addMethod('GET', entryApiIntegration);
-  };
+
+    new CfnOutput(this, 'EntryApiUrl', {
+      value: api.url,
+      description: 'Entry API Gateway URL'
+    });
+  }
 }
