@@ -1,7 +1,7 @@
 import { Job } from "../../jobs/interfaces/job.interface";
 
 export interface Mission {
-  id: number;
+  id: string;
   mission_type: 'Cleaning' | 'Fly Doctor' | 'Maintenance';
   mission_status: 'Created' | 'In progress' | 'Completed' | 'Cancelled'
 }

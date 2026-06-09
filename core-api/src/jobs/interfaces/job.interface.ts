@@ -10,7 +10,7 @@ export interface JobTemplate {
 }
 
 export interface Job {
-  id: number;
+  id: string;
   mission_id: number;
   job_title: string;
   job_status: string;

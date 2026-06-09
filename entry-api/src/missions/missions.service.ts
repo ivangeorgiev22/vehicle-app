@@ -16,11 +16,11 @@ export class MissionsService {
     return mission;
   }
 
-  findOne(id: number): Promise<MissionWithJobs> {
+  findOne(id: string): Promise<MissionWithJobs> {
     return this.coreApi.getMission(id);
   }
 
-  updateStatus(id: number, req: UpdateMission): Promise<Mission | null> {
+  updateStatus(id: string, req: UpdateMission): Promise<Mission | null> {
     return this.coreApi.updateMissionStatus(id, req.mission_status);
   }
 }

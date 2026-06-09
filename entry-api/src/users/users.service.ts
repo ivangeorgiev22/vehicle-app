@@ -5,11 +5,11 @@ import { ApiClient } from "../core-client/api-client";
 export class UsersService {
   constructor( private coreApi: ApiClient) {}
 
-  uploadImage(id: number, file: Express.Multer.File): Promise<{image_url: string}> {
+  uploadImage(id: string, file: Express.Multer.File): Promise<{image_url: string}> {
     return this.coreApi.uploadImage(id,file);;
   }
 
-  getImage(id: number): Promise<{image_url: string | null}> {
+  getImage(id: string): Promise<{image_url: string | null}> {
     return this.coreApi.getImage(id);
   }
 }

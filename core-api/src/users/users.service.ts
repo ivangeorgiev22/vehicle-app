@@ -1,60 +1,60 @@
 import { Injectable } from "@nestjs/common";
-import { DatabaseService } from "../database/database.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
 import { User, CreatedUser } from "./interfaces/user-interface";
+import { DynamoDBService } from "../database/dynamodb.service";
+import { v4 as uuidv4 } from 'uuid';
+import { PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { randomUUID } from "crypto";
 
 @Injectable()
 export class UsersService {
-  constructor(private dbService: DatabaseService) {}
+  constructor(private dbService: DynamoDBService) {}
 
   //business logic for user registration
-  async create(dto: CreateUserDto): Promise<CreatedUser | undefined> {
-    const db = this.dbService.getDB();
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const res = await db.run(
-      `INSERT INTO users (
-        username,
-        password,
-        firstName,
-        lastName,
-        email,
-        role
-      )
-      VALUES (?,?,?,?,?,?)
-      `,
-      dto.username,
-      hashedPassword,
-      dto.firstName,
-      dto.lastName,
-      dto.email,
-      'ADMIN'
-    );
+  async create(req: CreateUserDto): Promise<CreatedUser | undefined> {
+    const db = this.dbService.getDb();
+    const hashedPassword = await bcrypt.hash(req.password, 10);
+    const id = randomUUID();
 
-    return {
-      //sqlite returns id of inserted row and the username
-      id: res.lastID!,
-      username: dto.username
-    };
+    await db.send(new PutCommand({
+      TableName: this.dbService.getUsersTable(),
+      Item: {
+        id,
+        username: req.firstName,
+        password: hashedPassword,
+        firstName: req.firstName,
+        lastName: req.lastName,
+        email: req.email,
+        role: 'ADMIN'
+      }
+    }));
+    return {id, username: req.username};
   }
-  //business logic for when an existing user logs in
-  async validateUser (username: string, password: string): Promise<User | null> {
-    const db = this.dbService.getDB();
 
-    const user = await db.get(`SELECT * FROM users WHERE username = ?`, username);
-    // if user doesn't exist fail
+  async validateUser (username: string, password: string): Promise<User | null> {
+    const db = this.dbService.getDb();
+
+    const res = await db.send(new QueryCommand({
+      TableName: this.dbService.getUsersTable(),
+      IndexName: 'username-index',
+      KeyConditionExpression: 'username = :username',
+      ExpressionAttributeValues: {
+        ':username': username
+      }
+    }));
+    console.log('res', JSON.stringify(res));
+    const user = res.Items?.[0]
+
     if (!user) {
       return null;
     }
-    // checks entered password with the hashed one stored in the DB for that user
     const matchPassword = await bcrypt.compare(password, user.password);
-    // if it's not a match fail
     if (!matchPassword) {
       return null;
     }
-    // don't return hashed password to the client.
-    user.password = undefined;
+    const {password: _, ...userWithoutPassword} = user;
 
-    return user;
+    return userWithoutPassword as User;
   }
 }

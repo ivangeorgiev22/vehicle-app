@@ -22,7 +22,7 @@ export class MissionsController {
 
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<MissionWithJobs> {
-    const mission = await this.missionsService.findOne(+id);
+    const mission = await this.missionsService.findOne(id);
 
     if(!mission) {
       throw new NotFoundException('Mission not found')
@@ -33,7 +33,7 @@ export class MissionsController {
 
   @Patch(':id/status')
   async updateStatus(@Param('id') id: string, @Body() req: UpdateMission): Promise<Mission> {
-    const mission = await this.missionsService.updateStatus(+id, req);
+    const mission = await this.missionsService.updateStatus(id, req);
 
     if(!mission) {
       throw new NotFoundException('Mission not found');
