@@ -5,7 +5,8 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as path from 'path';
-import { endpoints } from './endpoints';
+import { ApiEndpoint, apiEndpoints } from './constants/core-endpoints';
+import { entryApiEndpoints } from './constants/entry-endpoints';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -107,34 +108,25 @@ export class VehicleAppStack extends Stack {
 
     function generateRoutes(
       resource: apigateway.IResource, 
-      segments: string[], 
-      method: string, 
+      endpoints: ApiEndpoint[], 
       integration: apigateway.LambdaIntegration) 
     {
-      
-      //recursion stopping point for when we have no more segments left
-      if (segments.length === 0) {
-        resource.addMethod(method, integration);
-        return;
-      }
-      //split segments array in two parts 
-      const [current, ...rest] = segments;
+      for (const endpoint of endpoints) {
+        const childResource = resource.addResource(endpoint.endpointUrl);
 
-      //safety check for resources - either use an existing one or create a new one
-      let childResource = resource.node.tryFindChild(current) as apigateway.Resource
-      if(!childResource) {
-        childResource = resource.addResource(current);
-      }
+        if(endpoint.httpMethods) {
+          for (const method of endpoint.httpMethods) {
+            childResource.addMethod(method, integration);
+          }
+        }
 
-      //go deeper
-      generateRoutes(childResource, rest, method, integration);
+        if(endpoint.subEndpoints) {
+          generateRoutes(childResource, endpoint.subEndpoints, integration);
+        }
+      }
     }
-    //generate all endpoints from endpoints file
-    for (const endpoint of endpoints) {
-      const segments = endpoint.path.split('/').filter(seg => seg !== '');
-      const integration = endpoint.integration === 'core' ? coreIntegration : entryIntegration;
-      generateRoutes(restApi.root, segments, endpoint.method, integration);
-    };
+    generateRoutes(restApi.root, apiEndpoints, coreIntegration);
+    generateRoutes(restApi.root, entryApiEndpoints, entryIntegration);
 
     new CfnOutput(this, 'ApiUrl', {
       value: restApi.url,
