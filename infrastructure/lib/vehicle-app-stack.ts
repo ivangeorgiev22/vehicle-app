@@ -5,6 +5,7 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as path from 'path';
+import { endpoints } from './endpoints';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -104,64 +105,36 @@ export class VehicleAppStack extends Stack {
     const coreIntegration = new apigateway.LambdaIntegration(coreApiLambda, { proxy: true });
     const entryIntegration = new apigateway.LambdaIntegration(entryApiLambda, { proxy: true });
 
-    // Core routes under /api/...
-    const apiResource = restApi.root.addResource('api');
+    function generateRoutes(
+      resource: apigateway.IResource, 
+      segments: string[], 
+      method: string, 
+      integration: apigateway.LambdaIntegration) 
+    {
+      
+      //recursion stopping point for when we have no more segments left
+      if (segments.length === 0) {
+        resource.addMethod(method, integration);
+        return;
+      }
+      //split segments array in two parts 
+      const [current, ...rest] = segments;
 
-    const coreUsers = apiResource.addResource('users');
-    coreUsers.addMethod('POST', coreIntegration);
-    const coreUserValidate = coreUsers.addResource('validate');
-    coreUserValidate.addMethod('POST', coreIntegration);
-    const coreUser = coreUsers.addResource('{id}');
-    const coreUserImage = coreUser.addResource('image');
-    coreUserImage.addMethod('POST', coreIntegration);
-    coreUserImage.addMethod('GET', coreIntegration);
+      //safety check for resources - either use an existing one or create a new one
+      let childResource = resource.node.tryFindChild(current) as apigateway.Resource
+      if(!childResource) {
+        childResource = resource.addResource(current);
+      }
 
-    const coreMissions = apiResource.addResource('missions');
-    coreMissions.addMethod('POST', coreIntegration);
-    const coreMission = coreMissions.addResource('{id}');
-    coreMission.addMethod('GET', coreIntegration);
-    const coreMissionStatus = coreMission.addResource('status');
-    coreMissionStatus.addMethod('PATCH', coreIntegration);
-
-    const coreJobs = apiResource.addResource('jobs');
-    coreJobs.addMethod('GET', coreIntegration);
-    const coreJob = coreJobs.addResource('{id}');
-    coreJob.addMethod('GET', coreIntegration);
-    const coreJobStatus = coreJob.addResource('status');
-    coreJobStatus.addMethod('PATCH', coreIntegration);
-    const coreJobTask = coreJob.addResource('task');
-    const coreJobTaskKey = coreJobTask.addResource('{key}');
-    const coreJobTaskStatus = coreJobTaskKey.addResource('status');
-    coreJobTaskStatus.addMethod('PATCH', coreIntegration);
-
-    // Entry routes at root level
-    const entryAuth = restApi.root.addResource('auth');
-    const entryLogin = entryAuth.addResource('login');
-    entryLogin.addMethod('POST', entryIntegration);
-
-    const entryMissions = restApi.root.addResource('missions');
-    entryMissions.addMethod('POST', entryIntegration);
-    const entryMission = entryMissions.addResource('{id}');
-    entryMission.addMethod('GET', entryIntegration);
-    const entryMissionStatus = entryMission.addResource('status');
-    entryMissionStatus.addMethod('PATCH', entryIntegration);
-
-    const entryJobs = restApi.root.addResource('jobs');
-    entryJobs.addMethod('GET', entryIntegration);
-    const entryJob = entryJobs.addResource('{id}');
-    entryJob.addMethod('GET', entryIntegration);
-    const entryJobStatus = entryJob.addResource('status');
-    entryJobStatus.addMethod('PATCH', entryIntegration);
-    const entryJobTask = entryJob.addResource('task');
-    const entryJobTaskKey = entryJobTask.addResource('{key}');
-    const entryJobTaskStatus = entryJobTaskKey.addResource('status');
-    entryJobTaskStatus.addMethod('PATCH', entryIntegration);
-
-    const entryUsers = restApi.root.addResource('users');
-    const entryUser = entryUsers.addResource('{id}');
-    const entryUserImage = entryUser.addResource('image');
-    entryUserImage.addMethod('POST', entryIntegration);
-    entryUserImage.addMethod('GET', entryIntegration);
+      //go deeper
+      generateRoutes(childResource, rest, method, integration);
+    }
+    //generate all endpoints from endpoints file
+    for (const endpoint of endpoints) {
+      const segments = endpoint.path.split('/').filter(seg => seg !== '');
+      const integration = endpoint.integration === 'core' ? coreIntegration : entryIntegration;
+      generateRoutes(restApi.root, segments, endpoint.method, integration);
+    };
 
     new CfnOutput(this, 'ApiUrl', {
       value: restApi.url,
