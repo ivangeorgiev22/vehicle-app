@@ -50,14 +50,3 @@ vehiclemobile/.env.local
 # React Native generated
 vehiclemobile/android/app/src/main/assets/index.android.bundle
 vehiclemobile/android/app/src/main/assets/index.android.bundle.map
-
-*.js
-!jest.config.js
-*.d.ts
-infrastructure/node_modules/
-infrastructure/.env
-infrastructure/.env.local
-
-# CDK asset staging directory
-infrastructure/.cdk.staging
-infrastructure/cdk.out
