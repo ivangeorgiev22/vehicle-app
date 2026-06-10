@@ -22,7 +22,7 @@ export class UsersImageService {
     const db = this.dbService.getDb();
     
     //create a unique filename
-    const key = `users/${userId}/${Date.now()}-${file.originalname}`;
+    const key = `${userId}-${Date.now()}-${file.originalname}`;
 
     //now we upload to S3
     await this.s3.send(new PutObjectCommand({

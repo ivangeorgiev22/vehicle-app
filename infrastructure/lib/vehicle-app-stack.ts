@@ -46,7 +46,12 @@ export class VehicleAppStack extends Stack {
     });
 
     // S3 bucket reference
-    const imagesBucket = s3.Bucket.fromBucketName(this, 'ImagesBucket', `operator-images-bucket-${env}`);
+    const imagesBucket = new s3.Bucket(this, `operator-images-bucket-${env}`, {
+      bucketName: `operator-images-bucket-${env}`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
 
     // API Gateway
     const restApi = new apigateway.RestApi(this, 'VehicleAppApi', {
