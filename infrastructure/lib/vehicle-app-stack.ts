@@ -103,6 +103,7 @@ export class VehicleAppStack extends Stack {
     });
 
     // Routes
+    const coreResource = restApi.root.addResource('api');
     const coreIntegration = new apigateway.LambdaIntegration(coreApiLambda, { proxy: true });
     const entryIntegration = new apigateway.LambdaIntegration(entryApiLambda, { proxy: true });
 
@@ -125,7 +126,7 @@ export class VehicleAppStack extends Stack {
         }
       }
     }
-    generateRoutes(restApi.root, apiEndpoints, coreIntegration);
+    generateRoutes(coreResource, apiEndpoints, coreIntegration);
     generateRoutes(restApi.root, entryApiEndpoints, entryIntegration);
 
     new CfnOutput(this, 'ApiUrl', {
