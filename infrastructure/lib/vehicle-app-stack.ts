@@ -49,6 +49,12 @@ export class VehicleAppStack extends Stack {
     // API Gateway
     const restApi = new apigateway.RestApi(this, 'VehicleAppApi', {
       restApiName: `vehicle-app-${env}`,
+      binaryMediaTypes: [
+        'multipart/form-data',
+        'image/jpeg',
+        'image/png',
+        'application/octet-stream'
+      ],
       description: `Vehicle App ${env} API`,
       deployOptions: {
         stageName: env
