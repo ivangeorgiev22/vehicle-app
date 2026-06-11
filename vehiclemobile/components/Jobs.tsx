@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react"
 import { View, Text, StyleSheet, FlatList, Pressable } from "react-native";
 import { useAuth } from "../context/authContext";
-import { API_URL } from "@env";
+import { WEBSOCKET_URL } from "@env";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Params } from "../navigation/types";
-import { io, Socket } from "socket.io-client";
 
 interface Job {
   id: number;
@@ -18,42 +17,33 @@ export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
 
-  const fetchJobs = async () => {
-    try {
-      const res = await fetch(`${API_URL}/jobs`, {
-        headers: {'Authorization': `Bearer ${token}`}
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setJobs(data);
-      }
-    } catch (error) {
-      console.log('Error', error);
-    }
-  }
-
   useEffect(() => {
-    fetchJobs();
-  //  const socket: Socket = io(API_URL, {
-  //   auth: {token}
-  //  });
-  //  //upon connection, server sends all backlog jobs
-  //  socket.on('connect', () => {
-  //   console.log('Connected');
-  //  });
-  //  //listens for updates from server
-  //  socket.on('jobs:backlog', (data: Job[]) => {
-  //   setJobs(data);
-  //  });
-  //  //disconnects
-  //  socket.on('disconnect', () => {
-  //   console.log('Disconnected');
-  //  });
+    const webSocket = new WebSocket(WEBSOCKET_URL);
 
-  //  //on screen unmount clean up
-  //  return () => {
-  //   socket.disconnect();
-  //  };
+    webSocket.onopen = () => {
+      console.log('Websocket Connected');
+    };
+
+    webSocket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Message:', data)
+      
+      if(data.type === 'jobs:backlog') {
+        setJobs(data.jobs);
+      }
+    };
+
+    webSocket.onerror = (error) => {
+      console.log('Error', error)
+    };
+    
+    webSocket.onclose = () => {
+      console.log('Websocket Disconnected');
+    };
+
+    return () => {
+      webSocket.close();
+    }
   }, [])
 
   return (

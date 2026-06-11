@@ -7,6 +7,8 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as path from 'path';
 import { ApiEndpoint, apiEndpoints } from './constants/core-endpoints';
 import { entryApiEndpoints } from './constants/entry-endpoints';
+import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
+import * as apigwv2integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -45,6 +47,14 @@ export class VehicleAppStack extends Stack {
       partitionKey: { name: 'mission_id', type: dynamodb.AttributeType.STRING }
     });
 
+    //WebSocket connections table
+    const connectionsTable = new dynamodb.Table(this, 'ConnectionsTable', {
+      tableName: `connections-${env}`,
+      partitionKey: {name: 'connectionId', type: dynamodb.AttributeType.STRING},
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
     // S3 bucket reference
     const imagesBucket = new s3.Bucket(this, `operator-images-bucket-${env}`, {
       bucketName: `operator-images-bucket-${env}`,
@@ -66,6 +76,16 @@ export class VehicleAppStack extends Stack {
       deployOptions: {
         stageName: env
       }
+    });
+    //creates websocket api in aws - accepts connections from clients etc
+    const webSocketApi = new apigwv2.WebSocketApi(this, 'VehicleAppWebSocket', {
+      apiName: `vehicle-app-websocket-${env}`
+    });
+    //creates url client connects to 
+    const webSocketStage = new apigwv2.WebSocketStage(this, 'VehicleAppWebSocketStage', {
+      webSocketApi,
+      stageName: env,
+      autoDeploy: true
     });
 
     // Core Lambda
@@ -103,8 +123,44 @@ export class VehicleAppStack extends Stack {
       environment: {
         NODE_ENV: env,
         BASE_URL: apiUrl,
-        JWT_SECRET: process.env.JWT_SECRET || ''
+        JWT_SECRET: process.env.JWT_SECRET || '',
+        CONNECTIONS_TABLE: connectionsTable.tableName,
+        JOBS_TABLE: jobsTable.tableName
       }
+    });
+    connectionsTable.grantReadWriteData(entryApiLambda);
+    jobsTable.grantReadWriteData(entryApiLambda);
+    //callback URL
+    const webSocketUrl = `https://${webSocketApi.apiId}.execute-api.${this.region}.amazonaws.com/${env}`
+
+    const webSocketLambda = new lambda.Function(this, 'WebSocketLambda', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'dist/lambda.webSocketHandler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../entry-api')),
+      timeout: Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        NODE_ENV: env,
+        CONNECTIONS_TABLE: connectionsTable.tableName,
+        JOBS_TABLE: jobsTable.tableName,
+        WEBSOCKET_ENDPOINT: webSocketUrl
+
+      }
+    });
+
+    connectionsTable.grantReadWriteData(webSocketLambda);
+    jobsTable.grantReadWriteData(webSocketLambda);
+
+    const webSocketIntegration = new apigwv2integrations.WebSocketLambdaIntegration('WebSocketIntegration', webSocketLambda);
+    //WebSocket Routes
+    webSocketApi.addRoute('$connect', {
+      integration: webSocketIntegration
+    });
+    webSocketApi.addRoute('$disconnect', {
+      integration: webSocketIntegration
+    });
+    webSocketApi.addRoute('$default', {
+      integration: webSocketIntegration
     });
 
     // Routes
@@ -137,6 +193,11 @@ export class VehicleAppStack extends Stack {
     new CfnOutput(this, 'ApiUrl', {
       value: restApi.url,
       description: 'API Gateway URL'
+    });
+
+    new CfnOutput(this, 'WebSocketUrl', {
+      value: webSocketStage.url,
+      description: 'WebSocket URL'
     });
   }
 }
