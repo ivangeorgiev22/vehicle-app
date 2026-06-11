@@ -3,16 +3,18 @@ import { ApiClient } from "../core-client/api-client";
 import { CreateMissionRequest } from "./models/create-mission";
 import { UpdateMission } from "./models/update-mission";
 import { Mission, MissionWithJobs } from "./interfaces/missions-interface";
-import { broadcastJobs } from '..//websocket/websocket.handler';
+import { JobsGateway } from "../jobs/jobs.gateway";
 
 @Injectable()
 export class MissionsService {
-  constructor(private coreApi: ApiClient) {}
+  constructor(private coreApi: ApiClient, private jobsGateway: JobsGateway) {}
 
   async create(req: CreateMissionRequest): Promise<Mission> {
+    console.log('Creating mission, broadcastjobs next')
     const mission = await this.coreApi.createMission(req.mission_type);
-    //we push updated list to all connections
-    await broadcastJobs();
+    console.log('mission created, calling broadcastJobs');
+    await this.jobsGateway.broadcastJobs();
+    console.log('broadcastJobs called');
     return mission;
   }
 

@@ -22,14 +22,19 @@ export default function Jobs() {
 
     webSocket.onopen = () => {
       console.log('Websocket Connected');
+      webSocket.send(JSON.stringify({action: 'getBacklogJobs'}));
     };
 
     webSocket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('Message:', data)
-      
-      if(data.type === 'jobs:backlog') {
-        setJobs(data.jobs);
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Message:', data)
+        
+        if(data.type === 'jobs:backlog') {
+          setJobs(data.jobs);
+        }
+      } catch {
+        
       }
     };
 
@@ -37,8 +42,8 @@ export default function Jobs() {
       console.log('Error', error)
     };
     
-    webSocket.onclose = () => {
-      console.log('Websocket Disconnected');
+    webSocket.onclose = (event) => {
+      console.log('Websocket Disconnected', event.code, event.reason);
     };
 
     return () => {

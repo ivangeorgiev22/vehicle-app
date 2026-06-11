@@ -1,7 +1,7 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import ServerlessHttp from "serverless-http";
-import { webSocketHandler } from "./websocket/websocket.handler";
+import { webSocketHandler } from "./websocket-lambda";
 
 let handler: any;
 

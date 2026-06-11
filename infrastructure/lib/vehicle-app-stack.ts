@@ -9,6 +9,7 @@ import { ApiEndpoint, apiEndpoints } from './constants/core-endpoints';
 import { entryApiEndpoints } from './constants/entry-endpoints';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwv2integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -77,6 +78,11 @@ export class VehicleAppStack extends Stack {
         stageName: env
       }
     });
+
+    // Construct the API URL without referencing the deployment stage resource,
+    // which would create a circular dependency (Lambda ← Stage ← Methods ← Lambda).
+    const apiUrl = `https://${restApi.restApiId}.execute-api.${this.region}.amazonaws.com/${env}/`;
+
     //creates websocket api in aws - accepts connections from clients etc
     const webSocketApi = new apigwv2.WebSocketApi(this, 'VehicleAppWebSocket', {
       apiName: `vehicle-app-websocket-${env}`
@@ -86,6 +92,26 @@ export class VehicleAppStack extends Stack {
       webSocketApi,
       stageName: env,
       autoDeploy: true
+    });
+
+     //callback URL
+    const webSocketUrl = `https://${webSocketApi.apiId}.execute-api.${this.region}.amazonaws.com/${env}`
+
+    const webSocketLambda = new lambda.Function(this, 'WebSocketLambda', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'dist/lambda.webSocketHandler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../entry-api')),
+      timeout: Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        NODE_ENV: env,
+        CONNECTIONS_TABLE: connectionsTable.tableName,
+        JOBS_TABLE: jobsTable.tableName,
+        WEBSOCKET_ENDPOINT: webSocketUrl,
+        BASE_URL: apiUrl,
+        JWT_SECRET: process.env.JWT_SECRET || '',
+
+      }
     });
 
     // Core Lambda
@@ -109,10 +135,6 @@ export class VehicleAppStack extends Stack {
     jobsTable.grantReadWriteData(coreApiLambda);
     imagesBucket.grantReadWrite(coreApiLambda);
 
-    // Construct the API URL without referencing the deployment stage resource,
-    // which would create a circular dependency (Lambda ← Stage ← Methods ← Lambda).
-    const apiUrl = `https://${restApi.restApiId}.execute-api.${this.region}.amazonaws.com/${env}/`;
-
     // Entry Lambda
     const entryApiLambda = new lambda.Function(this, 'EntryApiLambda', {
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -125,31 +147,21 @@ export class VehicleAppStack extends Stack {
         BASE_URL: apiUrl,
         JWT_SECRET: process.env.JWT_SECRET || '',
         CONNECTIONS_TABLE: connectionsTable.tableName,
-        JOBS_TABLE: jobsTable.tableName
+        JOBS_TABLE: jobsTable.tableName,
+        WEBSOCKET_ENDPOINT: webSocketUrl
       }
     });
     connectionsTable.grantReadWriteData(entryApiLambda);
     jobsTable.grantReadWriteData(entryApiLambda);
-    //callback URL
-    const webSocketUrl = `https://${webSocketApi.apiId}.execute-api.${this.region}.amazonaws.com/${env}`
-
-    const webSocketLambda = new lambda.Function(this, 'WebSocketLambda', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'dist/lambda.webSocketHandler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../entry-api')),
-      timeout: Duration.seconds(30),
-      memorySize: 256,
-      environment: {
-        NODE_ENV: env,
-        CONNECTIONS_TABLE: connectionsTable.tableName,
-        JOBS_TABLE: jobsTable.tableName,
-        WEBSOCKET_ENDPOINT: webSocketUrl
-
-      }
-    });
 
     connectionsTable.grantReadWriteData(webSocketLambda);
     jobsTable.grantReadWriteData(webSocketLambda);
+    webSocketApi.grantManageConnections(webSocketLambda);
+    webSocketApi.grantManageConnections(entryApiLambda);
+    webSocketLambda.addPermission('WebSocketConnectPermission', {
+      principal: new iam.ServicePrincipal('apigateway.amazonaws.com'),
+      sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${webSocketApi.apiId}/*/*`
+    })
 
     const webSocketIntegration = new apigwv2integrations.WebSocketLambdaIntegration('WebSocketIntegration', webSocketLambda);
     //WebSocket Routes
@@ -160,7 +172,8 @@ export class VehicleAppStack extends Stack {
       integration: webSocketIntegration
     });
     webSocketApi.addRoute('$default', {
-      integration: webSocketIntegration
+      integration: webSocketIntegration,
+      returnResponse: true
     });
 
     // Routes
