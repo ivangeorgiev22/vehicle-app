@@ -4,7 +4,6 @@ import { MissionStatus} from './models/UpdateMissionStatus';
 import { JobsService } from "../jobs/jobs.service";
 import { Mission, MissionWithJobs } from "./interfaces/mission-interface";
 import { DynamoDBService } from "../database/dynamodb.service";
-import { v4 as uuidv4 } from 'uuid';
 import { PutCommand, QueryCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { Job } from "../jobs/interfaces/job.interface";
 import { randomUUID } from "crypto";

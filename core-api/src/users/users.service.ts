@@ -3,7 +3,6 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
 import { User, CreatedUser } from "./interfaces/user-interface";
 import { DynamoDBService } from "../database/dynamodb.service";
-import { v4 as uuidv4 } from 'uuid';
 import { PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 

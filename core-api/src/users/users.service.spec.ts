@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { UsersService } from "./users.service";
-import { DatabaseService } from "../database/database.service";
+import { DynamoDBService } from "../database/dynamodb.service";
 import * as bcrypt from 'bcrypt';
 
 // we mock the entire brypt module
@@ -14,13 +14,13 @@ describe("UsersService", () => {
   
   //fake DB object for testing purposes 
   const mockDb = {
-    run: jest.fn(),
-    get: jest.fn()
+    send: jest.fn()
   };
 
   //fake DB Service to be able to use getDB
   const mockDbService = {
-    getDB: jest.fn().mockReturnValue(mockDb)
+    getDb: jest.fn().mockReturnValue(mockDb),
+    getUsersTable: jest.fn().mockReturnValue('users-test')
   };
 
   //set up a new NestJS app before each test
@@ -29,7 +29,7 @@ describe("UsersService", () => {
       providers: [
         UsersService,
         {
-          provide: DatabaseService,
+          provide: DynamoDBService,
           useValue: mockDbService
         }
       ]
@@ -57,7 +57,7 @@ describe("UsersService", () => {
       };
 
       //run fake DB and specify what to return
-      mockDb.run.mockResolvedValue({ lastID: 1 });
+      mockDb.send.mockResolvedValue({});
 
       await service.create(userObj);
 
@@ -74,19 +74,19 @@ describe("UsersService", () => {
         email: 'johndoe@test.com'
       };
 
-      mockDb.run.mockResolvedValue({ lastID: 1 });
-
+      mockDb.send.mockResolvedValue({});
       const res = await service.create(userObj);
 
-      expect(res).toEqual({ id: 1, username: 'john' });
+      expect(res?.id).toBeDefined();
+      expect(typeof res?.id).toBe('string');
+      expect(res?.username).toBe('john');
     });
   });
 
   describe('validateUser()', () => {
 
     it('Should return null if user does not exist', async () => {
-      //fake db returns nothing - user not found 
-      mockDb.get.mockResolvedValue(null);
+      mockDb.send.mockResolvedValue({Items: []});
 
       const res = await service.validateUser('mike', '12344');
 
@@ -95,11 +95,13 @@ describe("UsersService", () => {
 
     it('Should return null if password does not match', async () => {
       //mocked db returns a user object
-      mockDb.get.mockResolvedValue({
-        id: 1,
-        username: 'john',
-        password: 'hashedpassword',
-        role: 'USER'
+      mockDb.send.mockResolvedValue({
+        Items: [{
+          id: '1',
+          username: 'john',
+          password: 'hashedpassword',
+          role: 'USER'
+        }]
       });
       //bcrypt.compare purposely returns false as if password is wrong
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
@@ -111,19 +113,21 @@ describe("UsersService", () => {
 
     it('Should return user without passowrd on success', async () => {
       //db query gives us the user obj
-      mockDb.get.mockResolvedValue({
-        id: 1,
-        username: 'john',
-        password: 'hashedpassword',
-        role: 'USER'
+      mockDb.send.mockResolvedValue({
+        Items: [{
+          id: '1',
+          username: 'john',
+          password: 'hashedpassword',
+          role: 'USER'
+        }]
       });
       //bcrypt compare returns true 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       const res = await service.validateUser('john', 'correctpassword');
 
-      expect(res).toHaveProperty('password', undefined);
-      expect(res).toEqual({ id: 1, username: 'john', role: 'USER' });
+      expect(res).not.toHaveProperty('password');
+      expect(res).toEqual({ id: '1', username: 'john', role: 'USER' });
     });
   });
 })

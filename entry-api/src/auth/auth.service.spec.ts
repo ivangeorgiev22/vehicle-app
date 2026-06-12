@@ -35,7 +35,7 @@ describe('AuthService', () => {
   describe('Login()', () => {
 
     it('Calls validateUser with username and password', async () => {
-      const mockUser = { id: 1, username: 'john', role: 'USER' };
+      const mockUser = { id: '1', username: 'john', role: 'USER' };
       mockApiClient.validateUser.mockResolvedValue(mockUser);
 
       await service.login('john', '123456');
@@ -44,20 +44,20 @@ describe('AuthService', () => {
     });
 
     it('Calls jwtService.sign with the correct payload', async () => {
-      const mockUser = { id: 1, username: 'john', role: 'USER'};
+      const mockUser = { id: '1', username: 'john', role: 'USER'};
       mockApiClient.validateUser.mockResolvedValue(mockUser);
 
       await service.login('john', '123456');
 
       expect(mockJwtService.sign).toHaveBeenCalledWith({
-        sub: 1,
+        sub: '1',
         username: 'john',
         role: 'USER'
       });
     });
 
     it('Returns accessToken and user on success', async () => {
-      const mockUser = { id: 1, username: 'john', role: 'USER' };
+      const mockUser = { id: '1', username: 'john', role: 'USER' };
       mockApiClient.validateUser.mockResolvedValue(mockUser);
 
       const res = await service.login('john', '123456');
@@ -66,7 +66,7 @@ describe('AuthService', () => {
         accessToken: 'jwt-token',
         isAdmin: false,
         user: {
-          id: 1,
+          id: '1',
           username: 'john'
         }
       });

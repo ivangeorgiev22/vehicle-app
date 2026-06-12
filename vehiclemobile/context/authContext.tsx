@@ -7,8 +7,8 @@ type AuthContextType = {
   setToken: (token: string) => void;
   isAdmin: boolean;
   setIsAdmin: (isAmdin: boolean) => void;
-  userId: number;
-  setUserId: (userId: number) => void;
+  userId: string;
+  setUserId: (userId: string) => void;
 };
 // createContext creates a global container. default value null beofore it's set up by the provider
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode}) {
   const [username, setUsername] = useState('');
   const [token, setToken] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
-  const [userId, setUserId] = useState(0);
+  const [userId, setUserId] = useState('0');
 
   return (
     // any component will be able to access those

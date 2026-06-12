@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Params } from "../navigation/types";
 
 interface Job {
-  id: number;
+  id: string;
   job_title: string;
   job_status: string;
 }

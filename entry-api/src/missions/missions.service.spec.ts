@@ -1,6 +1,7 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { ApiClient } from "../core-client/api-client";
 import { MissionsService } from "./missions.service";
+import { JobsGateway } from "../jobs/jobs.gateway";
 
 describe('MissionsService', () => {
   let service: MissionsService;
@@ -11,6 +12,10 @@ describe('MissionsService', () => {
     updateMissionStatus: jest.fn()
   };
 
+  const mockJobsGateway = {
+    broadcastJobs: jest.fn()
+  }
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -18,6 +23,10 @@ describe('MissionsService', () => {
         {
           provide: ApiClient,
           useValue: mockApiClient
+        },
+        {
+          provide: JobsGateway,
+          useValue: mockJobsGateway
         }
       ]
     }).compile()
@@ -31,7 +40,7 @@ describe('MissionsService', () => {
   describe('create()', () => {
     it('Calls API with mission type', async () => {
       const mockMission = {
-        id: 1,
+        id: '1',
         mission_type: 'Cleaning',
         mission_status: 'Created'
       };
@@ -46,13 +55,13 @@ describe('MissionsService', () => {
   describe('findOne()', () => {
     it('Calls API with id and returns mission with jobs', async () => {
       const mockMission = {
-        id: 1,
+        id: '1',
         mission_type: 'Cleaning',
         mission_status: 'Created',
         jobs: [
           {
-            id: 1,
-            mission_id: 1,
+            id: '1',
+            mission_id: '1',
             job_title: 'Exterior Clean',
             job_status: 'Backlog',
             tasks: [
@@ -62,9 +71,9 @@ describe('MissionsService', () => {
         ]
       };
       mockApiClient.getMission.mockResolvedValue(mockMission);
-      const res = await service.findOne(1);
+      const res = await service.findOne('1');
 
-      expect(mockApiClient.getMission).toHaveBeenCalledWith(1);
+      expect(mockApiClient.getMission).toHaveBeenCalledWith('1');
       expect(res).toEqual(mockMission);
       expect(res.jobs).toHaveLength(1);
     });
@@ -73,15 +82,15 @@ describe('MissionsService', () => {
   describe('updateStatus()', () => {
     it('Should call API and return updated mission', async () => {
       const mockMission = {
-        id: 1,
+        id: '1',
         mission_type: 'Cleaning',
         mission_status: 'In Progress'
       };
       mockApiClient.updateMissionStatus.mockResolvedValue(mockMission);
 
-      const res = await service.updateStatus(1, {mission_status: 'In Progress'});
+      const res = await service.updateStatus('1', {mission_status: 'In Progress'});
 
-      expect(mockApiClient.updateMissionStatus).toHaveBeenCalledWith(1, 'In Progress');
+      expect(mockApiClient.updateMissionStatus).toHaveBeenCalledWith('1', 'In Progress');
       expect(res).toEqual(mockMission);
     })
   })

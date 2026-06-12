@@ -8,7 +8,7 @@ import { launchImageLibrary } from "react-native-image-picker";
 export default function Profile() {
   const {token} = useAuth();
   const route = useRoute();
-  const {id} = route.params as {id: number};
+  const {id} = route.params as {id: string};
   const [image, setImage] = useState<string | null>(null);
 
   const fetchImage = async () => {

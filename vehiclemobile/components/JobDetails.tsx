@@ -13,7 +13,7 @@ interface Task {
 export default function JobDetails() {
   const { token } = useAuth();
   const route = useRoute(); //gives access to current screen route object
-  const { id } = route.params as {id: number}; //typed unknown by default so assure typescript there is a valid id
+  const { id } = route.params as {id: string}; //typed unknown by default so assure typescript there is a valid id
   const [tasks, setTasks] = useState<Task[]>([]);
 
   const fetchJob = async () => {
