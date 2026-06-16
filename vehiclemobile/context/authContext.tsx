@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type AuthContextType = {
   username: string;
@@ -9,6 +10,9 @@ type AuthContextType = {
   setIsAdmin: (isAmdin: boolean) => void;
   userId: string;
   setUserId: (userId: string) => void;
+  image: string;
+  setImage: (image: string) => void;
+  logout: () => void;
 };
 // createContext creates a global container. default value null beofore it's set up by the provider
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -21,10 +25,20 @@ export function AuthProvider({ children }: { children: React.ReactNode}) {
   const [token, setToken] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState('0');
+  const [image, setImage] = useState('');
+
+  const logout = () => {
+    setUsername('');
+    setToken('');
+    setIsAdmin(false);
+    setUserId('');
+    setImage('');
+    AsyncStorage.removeMany(['token', 'isAdmin', 'username', 'userId', 'image'])
+  }
 
   return (
     // any component will be able to access those
-    <AuthContext.Provider value={{username, setUsername, token, setToken, isAdmin, setIsAdmin, userId, setUserId}}>
+    <AuthContext.Provider value={{username, setUsername, token, setToken, isAdmin, setIsAdmin, userId, setUserId, image, setImage, logout}}>
       {children}
     </AuthContext.Provider>
   )

@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
-import { View, Text, StyleSheet, FlatList, Alert, Pressable } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { View, Text, StyleSheet, FlatList, Alert, Pressable, Image } from "react-native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useAuth } from "../context/authContext";
 import { API_URL } from "@env";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Params } from "../navigation/types";
+import User from 'react-native-vector-icons/Feather';
 
 interface Task {
   key: string;
@@ -11,10 +15,11 @@ interface Task {
 }
 
 export default function JobDetails() {
-  const { token } = useAuth();
+  const { token, image, userId } = useAuth();
   const route = useRoute(); //gives access to current screen route object
   const { id } = route.params as {id: string}; //typed unknown by default so assure typescript there is a valid id
   const [tasks, setTasks] = useState<Task[]>([]);
+  const navigation = useNavigation<NativeStackNavigationProp<Params>>();
 
   const fetchJob = async () => {
     try {
@@ -57,50 +62,68 @@ export default function JobDetails() {
   }, [])
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tasks</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.title}>Tasks</Text>
+        </View>
+        <Pressable onPress={() => navigation.navigate('Profile', { id: userId })}>
+          <View style={styles.avatar}>
+            {image ? (
+              <Image source={{uri: image }} style={styles.img} />
+            ):(
+              <User name="user" size={22} />
+            )}
+          </View>
+        </Pressable>
+      </View>
       <FlatList
         data={tasks}
         keyExtractor={(item) => item.key}
+        contentContainerStyle={{padding: 15}}
         renderItem={({item}) => (
-          <View style={styles.taskList}>
-            <Text style={styles.taskDesc}>{item.description}</Text>
-            <Text style={styles.taskStatus}>Status: {item.task_status}</Text>
+          <View style={styles.taskItem}>
+            <View style={styles.label} />
+            <View style={styles.taskInfo}>
+              <Text style={styles.taskDesc}>{item.description}</Text>
+              <Text style={styles.taskStatus}>Status: {item.task_status}</Text>
+            </View>
 
             {item.task_status === 'Waiting' && (
               <Pressable onPress={() => updateTaskStatus(item.key, 'Accepted')} style={styles.acceptButton}>
-                <Text>Accept Task</Text>
+                <Text style={styles.buttonTxt}>Accept</Text>
               </Pressable>
             )}
 
             {item.task_status === 'Accepted' && (
               <Pressable onPress={() => updateTaskStatus(item.key, 'Completed')} style={styles.completeButton}>
-                <Text>Complete Task</Text>
+                <Text style={styles.buttonTxt}>Complete</Text>
               </Pressable>
             )}
           </View>
         )}
-       />
-    </View>
+      />
+    </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20
+    backgroundColor: '#f0f2f5',
   },
   title: {
-    fontSize: 25,
-    textAlign: 'center',
-    marginBottom: 15
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff'
   },
-  taskList: {
-    borderWidth: 2,
-    borderRadius: 8,
-    flexDirection: 'column',
-    padding: 20,
-    marginBottom: 12
+  taskItem: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 10,
+    flexDirection: 'row',
+    elevation: 2,
   },
   taskDesc: {
     fontSize: 20,
@@ -110,20 +133,54 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 7,
     fontStyle: 'italic',
-    alignSelf: 'baseline'
   },
   acceptButton: {
     backgroundColor: '#2196F3',
-    borderRadius: 4,
-    padding: 7,
+    borderRadius: 8,
+    padding: 10,
     alignItems: 'center',
     alignSelf: 'flex-end',
   },
+  buttonTxt: {
+    color: '#fff'
+  },
   completeButton: {
     backgroundColor: '#4caf50',
-    borderRadius: 4,
-    padding: 7,
+    borderRadius: 8,
+    padding: 10,
     alignItems: 'center',
     alignSelf: 'flex-end',
+  },
+  header: {
+    backgroundColor: '#1a1a2e',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 50
+  },
+  label: {
+    width: 4,
+    height: 'auto',
+    borderRadius: 2,
+    marginRight: 14,
+    backgroundColor: '#0d4fc0'
+  },
+  taskInfo: {
+    flex: 1
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#adafb3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  img: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   }
 })

@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, FlatList, Pressable } from "react-native";
+import { View, Text, StyleSheet, FlatList, Pressable, Image } from "react-native";
 import { useAuth } from "../context/authContext";
 import { WEBSOCKET_URL } from "@env";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Params } from "../navigation/types";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/SimpleLineIcons";
+import User from 'react-native-vector-icons/Feather';
 
 interface Job {
   id: string;
@@ -13,23 +16,20 @@ interface Job {
 }
 
 export default function Jobs() {
-  const { token, userId } = useAuth();
+  const { userId, image } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
 
   useEffect(() => {
     const webSocket = new WebSocket(WEBSOCKET_URL);
-
     webSocket.onopen = () => {
       console.log('Websocket Connected');
       webSocket.send(JSON.stringify({action: 'getBacklogJobs'}));
     };
-
     webSocket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         console.log('Message:', data)
-        
         if(data.type === 'jobs:backlog') {
           setJobs(data.jobs);
         }
@@ -37,62 +37,106 @@ export default function Jobs() {
         
       }
     };
-
     webSocket.onerror = (error) => {
       console.log('Error', error)
     };
-    
     webSocket.onclose = (event) => {
       console.log('Websocket Disconnected', event.code, event.reason);
     };
-
     return () => {
       webSocket.close();
     }
   }, [])
 
   return (
-    <View style={styles.container}>
-       <Pressable onPress={() => navigation.navigate('Profile', {id: userId }) }>
-        <Text style={styles.profileTitle}>Profile</Text>
-      </Pressable>
-      <Text style={styles.title}>Jobs</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.title}>Jobs</Text>
+        </View>
+        <Pressable onPress={() => navigation.navigate('Profile', { id: userId })}>
+          <View style={styles.avatar}>
+            {image ? (
+              <Image source={{uri: image }} style={styles.img} />
+            ):(
+              <User name="user" size={22} />
+            )}
+          </View>
+        </Pressable>
+      </View>
       <FlatList 
         data={jobs} 
         keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{padding: 15}}
         renderItem={({item}) => (
           <Pressable onPress={() => navigation.navigate('Job Details', {id: item.id})}>
             <View style={styles.jobItem}>
-              <Text style={styles.jobTitle}>{item.job_title}</Text>
+              <View style={styles.label} />
+              <View style={styles.jobInfo}>
+                <Text style={styles.jobTitle}>{item.job_title}</Text>
+              </View>
+              <Icon name="arrow-right" size={15} />
             </View>
           </Pressable>
         )} 
       />
-    </View>
+    </SafeAreaView>
   )
 }
 
 const styles= StyleSheet.create({
   container: {
-    padding: 20,
     flex: 1,
+    backgroundColor: '#f0f2f5',
   },
   title: {
-    fontSize: 25,
-    textAlign: 'center',
-    marginBottom: 20
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff'
   },
   jobItem: {
-    padding: 12,
-    borderColor: '#151414',
-    borderWidth: 2,
-    borderRadius: 5,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 2,
+
   },
   jobTitle: {
-    fontSize: 15
+    fontSize: 16
   },
-  profileTitle: {
-    fontSize: 20
-  }
+  header: {
+    backgroundColor: '#1a1a2e',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 50,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#adafb3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  img: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  label: {
+    width: 4,
+    height: 40,
+    borderRadius: 2,
+    marginRight: 14,
+    backgroundColor: '#0d4fc0'
+  },
+  jobInfo: {
+    flex: 1
+  },
 })

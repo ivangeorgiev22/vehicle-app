@@ -1,17 +1,42 @@
 import { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet,Alert } from "react-native";
+import { View, Text, TextInput, StyleSheet,Alert, TouchableOpacity, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Params } from "../navigation/types";
 import { useAuth } from "../context/authContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "@env";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/Feather";
 
 export default function Login () {
-  const { setUsername, setToken, setIsAdmin, setUserId } = useAuth();
+  const { setUsername, setToken, setIsAdmin, setUserId, setImage } = useAuth();
   const [username, setUsernameInput] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
+
+  const getImage = async (userId: string, token: string) => {
+    try {
+      const res = await fetch(`${API_URL}/users/${userId}/image`, {
+        headers: {'Authorization': `Bearer ${token}`}
+      });
+      const data = await res.json();
+      if(!data.image_url) return;
+
+      const imgRes = await fetch(data.image_url);
+      const blob = await imgRes.blob();
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setImage(base64);
+        AsyncStorage.setItem('image', base64);
+      };
+      reader.readAsDataURL(blob)
+    } catch (error) {
+      console.log('Error', error);
+    }
+  }
 
   const login = async () => {
     try {
@@ -31,10 +56,13 @@ export default function Login () {
         setToken(data.accessToken);
         setIsAdmin(data.isAdmin);
         setUserId(data.user.id);
+        getImage(data.user.id, data.accessToken);
 
         // save for persistence
         await AsyncStorage.setItem('token', data.accessToken);
         await AsyncStorage.setItem('isAdmin', JSON.stringify(data.isAdmin));
+        await AsyncStorage.setItem('username', username);
+        await AsyncStorage.setItem('userId', data.user.id);
 
         if (data.isAdmin) {
           navigation.navigate('Home');
@@ -51,40 +79,80 @@ export default function Login () {
     }
   }
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
-      <TextInput
-        placeholder="Username"
-        style={styles.input}
-        value={username}
-        onChangeText={setUsernameInput}
-      />
-      <TextInput
-        placeholder="Password"
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword} 
-      />
-      <Button title="Login" onPress={login}/>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Login</Text>
+        <View style={styles.input}>
+          <Icon name="user" size={16} />
+          <TextInput
+            placeholder="Username"
+            style={styles.inputField}
+            value={username}
+            onChangeText={setUsernameInput}
+          />
+        </View>
+        <View style={styles.input}>
+          <Icon name="lock" size={15} />
+          <TextInput
+            placeholder="Password"
+            value={password}
+            style={styles.inputField}
+            secureTextEntry={true}
+            onChangeText={setPassword} 
+          />
+        </View>
+        <TouchableOpacity 
+          onPress={login}
+          style={styles.button}
+        >
+          <Text style={styles.buttonTxt}>Login</Text>
+        </TouchableOpacity> 
+      </View>
+    </SafeAreaView>
   )
 }
 // styling, outsise the component!
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 15
+    flex: 1, 
+    justifyContent: 'center'
+  },
+  card: {
+    backgroundColor: '#ffffff', 
+    borderRadius: 16, 
+    padding: 24, 
+    margin: 20, 
+    elevation: 2
   },
   title: {
-    fontSize: 25,
-    textAlign: 'center',
-    marginBottom: 10
+    fontSize: 28, 
+    fontWeight: '500', 
+    marginBottom: 30, 
+  },
+  inputField: {
+    flex: 1, 
+    paddingVertical: 0, 
+    fontSize: 15, 
+    marginLeft: 2
   },
   input: {
-    borderColor: "#151414",
-    borderWidth: 2,
-    borderRadius: 5,
-    marginBottom: 10
+    flexDirection: 'row', 
+    padding: 8, 
+    marginBottom: 25, 
+    borderBottomColor: '#808080', 
+    borderBottomWidth: 1,
+    alignItems: 'center',
   },
+  button: {
+    backgroundColor: '#1a1a2e', 
+    padding: 15, 
+    borderRadius: 15, 
+    marginBottom: 30
+  },
+  buttonTxt: {
+    textAlign: 'center', 
+    fontWeight: '700', 
+    fontSize: 20, 
+    color: '#fff', 
+  }
 })
