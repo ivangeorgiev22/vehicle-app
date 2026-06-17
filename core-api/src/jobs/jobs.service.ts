@@ -11,10 +11,11 @@ import { randomUUID } from "crypto";
 export class JobsService {
   constructor (private dbService: DynamoDBService) {}
 
-  async createJob (mission_id: string, mission_type: string): Promise<void> {
+  async createJob (mission_id: string, mission_type: string): Promise<Job[]> {
     const db = this.dbService.getDb();
     const jobs = mission_templates[mission_type];
     const id = randomUUID();
+    const createdJobs: Job[] = [];
 
     for (const job of jobs) {
       await db.send(new PutCommand({
@@ -27,7 +28,12 @@ export class JobsService {
           tasks: JSON.stringify(job.tasks)
         }
       }));
+      createdJobs.push({
+        ...job,
+        tasks: job.tasks
+      } as Job)
     }
+    return createdJobs;
   }
 
   async updateJobStatus (id: string, req: UpdateJobStatus): Promise<Job | null | undefined> {
