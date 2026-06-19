@@ -8,7 +8,7 @@ import { JwtStrategy } from "../auth/jwt.strategy";
 @Module({
   imports: [PassportModule, JwtModule.register({
     secret: process.env.JWT_SECRET_KEY || 'super-super-secret-key',
-    signOptions: {expiresIn: '3h'}
+    signOptions: {expiresIn: '60s'}
   })],
   providers: [JwtStrategy],
   exports: [JwtModule, PassportModule, JwtStrategy]

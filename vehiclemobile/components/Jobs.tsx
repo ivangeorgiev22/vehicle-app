@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, FlatList, Pressable, Image } from "react-native";
+import { View, Text, StyleSheet, FlatList, Pressable, Image, Alert } from "react-native";
 import { useAuth } from "../context/authContext";
 import { WEBSOCKET_URL } from "@env";
 import { useNavigation } from "@react-navigation/native";
@@ -19,22 +19,24 @@ export default function Jobs() {
   const { userId, image } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
+  const {token, logout} = useAuth();
 
   useEffect(() => {
     const webSocket = new WebSocket(WEBSOCKET_URL);
     webSocket.onopen = () => {
       console.log('Websocket Connected');
-      webSocket.send(JSON.stringify({action: 'getBacklogJobs'}));
+      webSocket.send(JSON.stringify({action: 'getBacklogJobs', token}));
     };
     webSocket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('Message:', data)
-        if(data.type === 'jobs:backlog') {
-          setJobs(data.jobs);
-        }
-      } catch {
-        
+      const data = JSON.parse(event.data);
+      console.log('Message:', data)
+
+      if(data.type === 'auth:expired') {
+        logout();
+        Alert.alert('Session expired', 'Please log in again.');
+      }
+      if(data.type === 'jobs:backlog') {
+        setJobs(data.jobs);
       }
     };
     webSocket.onerror = (error) => {

@@ -1,17 +1,16 @@
 import { useAuth } from "../context/authContext";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import { View, Text, StyleSheet, Alert, Image, TouchableOpacity } from "react-native";
 import { API_URL } from "@env";
 import { launchImageLibrary } from "react-native-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Params } from "../navigation/types";
+import { useFetch } from "../context/useFetch";
 
 export default function Profile() {
   const {token, username, image, setImage, logout} = useAuth();
   const route = useRoute();
   const {id} = route.params as {id: string};
-  const navigation = useNavigation<NativeStackNavigationProp<Params>>()
+  const callApi = useFetch();
 
   const uploadImage = async () => {
     //open image gallery
@@ -28,7 +27,7 @@ export default function Profile() {
         type: image.type,
         name: image.fileName
       })
-      const result = await fetch(`${API_URL}/users/${id}/image`, {
+      const result = await callApi(`${API_URL}/users/${id}/image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
