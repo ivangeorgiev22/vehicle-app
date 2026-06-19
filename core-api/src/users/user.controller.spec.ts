@@ -52,12 +52,12 @@ describe('UsersController', () => {
         email: 'johndoe@test.com'
       };
 
-      mockUsersService.create.mockResolvedValue({ id: 1, username: 'john'});
+      mockUsersService.create.mockResolvedValue({ id: '1', username: 'john'});
 
       const res = await controller.create(userObj);
 
       expect(mockUsersService.create).toHaveBeenCalledWith(userObj);
-      expect(res).toEqual({ id: 1, username: 'john' });
+      expect(res).toEqual({ id: '1', username: 'john' });
     });
   });
 
@@ -65,7 +65,7 @@ describe('UsersController', () => {
 
     it('Calls service with username and password', async () => {
       const reqBody = { username: 'john', password: '123456'};
-      const userObj = { id: 1, username: 'john', role: 'USER'};
+      const userObj = { id: '1', username: 'john', role: 'USER'};
       mockUsersService.validateUser.mockResolvedValue(userObj);
 
       const res = await controller.validate(reqBody);

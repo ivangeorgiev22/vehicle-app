@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react"
 import { View, Text, StyleSheet, FlatList, Pressable } from "react-native";
 import { useAuth } from "../context/authContext";
-import { API_URL } from "@env";
+import { WEBSOCKET_URL } from "@env";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Params } from "../navigation/types";
 
 interface Job {
-  id: number;
+  id: string;
   job_title: string;
   job_status: string;
 }
@@ -17,30 +17,40 @@ export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
 
-  const fetchJobs = async () => {
-    try {
-      const res = await fetch(`${API_URL}/jobs`, {
-        headers: {'Authorization': `Bearer ${token}`}
-      });
-
-      if(res.ok) {
-        const data = await res.json();
-        setJobs(data);
-      }
-    } catch (error) {
-      console.log('Error', error);
-    }
-
-  }
   useEffect(() => {
-    fetchJobs();
+    const webSocket = new WebSocket(WEBSOCKET_URL);
 
-    const interval = setInterval(() => {
-      fetchJobs();
-    }, 30000);
-    //clear interval once compoment unmounts
-    return () => clearInterval(interval);
+    webSocket.onopen = () => {
+      console.log('Websocket Connected');
+      webSocket.send(JSON.stringify({action: 'getBacklogJobs'}));
+    };
+
+    webSocket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Message:', data)
+        
+        if(data.type === 'jobs:backlog') {
+          setJobs(data.jobs);
+        }
+      } catch {
+        
+      }
+    };
+
+    webSocket.onerror = (error) => {
+      console.log('Error', error)
+    };
+    
+    webSocket.onclose = (event) => {
+      console.log('Websocket Disconnected', event.code, event.reason);
+    };
+
+    return () => {
+      webSocket.close();
+    }
   }, [])
+
   return (
     <View style={styles.container}>
        <Pressable onPress={() => navigation.navigate('Profile', {id: userId }) }>

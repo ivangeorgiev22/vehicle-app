@@ -32,7 +32,7 @@ describe('AuthController', () => {
       const userCred = { username: 'john', password: '123456'};
       mockAuthService.login.mockResolvedValue({
         accessToken: 'jwt-token',
-        user: { id: 1, username: 'john', role: 'USER'}
+        user: { id: '1', username: 'john', role: 'USER'}
       });
 
       await controller.login(userCred);
@@ -44,7 +44,7 @@ describe('AuthController', () => {
       const userCred = { username: 'john', password: '123456'};
       const mockRes = {
         accessToken: 'jwt-token',
-        user: { id: 1, username: 'john', role: 'USER'}
+        user: { id: '1', username: 'john', role: 'USER'}
       };
       mockAuthService.login.mockResolvedValue(mockRes);
 
@@ -60,7 +60,7 @@ describe('AuthController', () => {
 
       //mocked request obj that passport attaches the user to
       const mockReq = {
-        user: { id: 1, username: 'john', role: 'USER'}
+        user: { id: '1', username: 'john', role: 'USER'}
       };
 
       const res = controller.getProfile(mockReq);

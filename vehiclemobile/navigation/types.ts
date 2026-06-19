@@ -3,6 +3,6 @@ export type Params = {
   Login: undefined;
   Home: undefined;
   Jobs: undefined;
-  'Job Details': { id: number };
-  Profile: {id: number};
+  'Job Details': { id: string };
+  Profile: {id: string};
 }

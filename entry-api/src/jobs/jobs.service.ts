@@ -8,11 +8,11 @@ import { Job } from "./interfaces/job-interface";
 export class JobsService {
   constructor(private coreApi: ApiClient) {}
 
-  updateStatus(id: number, req: UpdateJobStatus): Promise<Job | null> {
+  updateStatus(id: string, req: UpdateJobStatus): Promise<Job | null> {
     return this.coreApi.updateJobStatus(id, req.job_status);
   }
 
-  updateTaskStatus(id: number, key: string, req: Pick<Task, 'task_status'>): Promise<Job | null> {
+  updateTaskStatus(id: string, key: string, req: Pick<Task, 'task_status'>): Promise<Job | null> {
     return this.coreApi.updateTaskStatus(id,key, req.task_status);
   }
 
@@ -20,7 +20,7 @@ export class JobsService {
     return this.coreApi.getBacklogJobs();
   }
 
-  getJobById(id: number): Promise<Job | null> {
+  getJobById(id: string): Promise<Job | null> {
     return this.coreApi.getJobById(id);
   }
 }

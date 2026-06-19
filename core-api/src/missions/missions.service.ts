@@ -1,67 +1,91 @@
 import { Injectable } from "@nestjs/common";
-import { DatabaseService } from "../database/database.service";
 import { CreateMissionRequest } from "./models/CreateMissionRequest";
 import { MissionStatus} from './models/UpdateMissionStatus';
 import { JobsService } from "../jobs/jobs.service";
 import { Mission, MissionWithJobs } from "./interfaces/mission-interface";
+import { DynamoDBService } from "../database/dynamodb.service";
+import { PutCommand, QueryCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { Job } from "../jobs/interfaces/job.interface";
+import { randomUUID } from "crypto";
 
 @Injectable()
 export class MissionsService {
-  constructor(private dbService: DatabaseService, private jobsService: JobsService) {}
+  constructor(private dbService: DynamoDBService, private jobsService: JobsService) {}
 
   async create(req: CreateMissionRequest): Promise<Mission | undefined> {
-    const db = this.dbService.getDB();
+    const db = this.dbService.getDb();
+    const id = randomUUID();
+    const mission: Mission = {
+      id,
+      mission_type: req.mission_type,
+      mission_status: 'Created'
+    };
 
-    const res = await db.run(
-      `INSERT INTO missions (mission_type) VALUES (?)`, req.mission_type
-    );
+    await db.send(new PutCommand({
+      TableName: this.dbService.getMissionsTable(),
+      Item: mission
+    }));
 
-    await this.jobsService.createJob(Number(res.lastID), req.mission_type)
+    await this.jobsService.createJob(id, req.mission_type)
 
-    return db.get(
-      `SELECT * FROM missions WHERE id = ?`, res.lastID
-    );
+    return mission
 
   };
 
-  async findOne(id: number): Promise<MissionWithJobs | null> {
-    const db = this.dbService.getDB();
-    const mission = await db.get(
-      `SELECT * FROM missions WHERE id = ?`, id
-    );
+  async findOne(id: string): Promise<MissionWithJobs | null> {
+    const db = this.dbService.getDb();
+    const mission = await db.send(new GetCommand({
+      TableName: this.dbService.getMissionsTable(),
+      Key: {id}
+    }));
 
     if (!mission) {
       return null;
     }
+    //get all jobs for mission using GSI
+    const jobsRes = await db.send(new QueryCommand({
+      TableName: this.dbService.getJobsTable(),
+      IndexName: 'mission-id-index',
+      KeyConditionExpression: 'mission_id = :mission_id',
+      ExpressionAttributeValues: {
+        ':mission_id': id
+      }
+    }));
 
-    const jobs = await db.all(
-      `SELECT * FROM jobs WHERE mission_id = ?`, id
-    )
+    const jobs = (jobsRes.Items || []).map(job => ({
+      ...job,
+      tasks: typeof job.tasks === 'string' ? JSON.parse(job.tasks) : job.tasks
+    })) as Job[];
 
     return {
-      ...mission,
-      jobs: jobs.map(job => ({
-        ...job,
-        tasks: JSON.parse(job.tasks)
-      })),
+      ...mission.Item as Mission,
+      jobs
     };
   }
 
-  async updateStatus(id: number, req: MissionStatus): Promise<Mission | null | undefined> {
-    const db = this.dbService.getDB();
+  async updateStatus(id: string, req: MissionStatus): Promise<Mission | null | undefined> {
+    const db = this.dbService.getDb();
     // check if mission exists
-    const mission = await db.get(`SELECT * FROM missions WHERE id = ?`, id);
+    const mission = await db.send(new GetCommand({
+      TableName: this.dbService.getMissionsTable(),
+      Key: {id}
+    }));
 
     if(!mission) {
       return null;
     }
     // run the update 
-    await db.run(
-      `UPDATE missions SET mission_status = ? WHERE id = ?`,
-      req.mission_status,
-      id
-    );
+    await db.send(new UpdateCommand({
+      TableName: this.dbService.getMissionsTable(),
+      Key: {id},
+      UpdateExpression: 'SET mission_status = :mission_status',
+      ExpressionAttributeValues: {
+        ':mission_status': req.mission_status
+      }
+    }));
     // return updated mission
-    return db.get(`SELECT * FROM missions WHERE id = ?`, id);
+    return {
+      ...mission.Item as Mission,
+    }
   }
 }
