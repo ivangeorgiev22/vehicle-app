@@ -8,6 +8,7 @@ import { Params } from "../navigation/types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DropDownPicker from "react-native-dropdown-picker";
 import User from 'react-native-vector-icons/Feather'
+import { theme } from "../theme";
 
 type MissionType = 'Cleaning' | 'Fly Doctor' | 'Maintenance' | '';
 
@@ -86,12 +87,12 @@ export default function Home () {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: theme.colors.background,
   },
   header: {
-    backgroundColor: '#1a1a2e',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
+    backgroundColor: theme.colors.header,
+    paddingHorizontal: theme.spacing.horizontal,
+    paddingVertical: theme.spacing.vertical,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -100,32 +101,32 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#fff'
+    color: theme.colors.text
   },
   headerTxt: {
-    color: '#fff',
+    color: theme.colors.text,
     fontSize: 15,
     fontWeight: '700'
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#adafb3',
+    width: theme.avatar.size,
+    height: theme.avatar.size,
+    borderRadius: theme.borderRadius.avatar,
+    backgroundColor: theme.colors.avatar,
     justifyContent: 'center',
     alignItems: 'center',
   },
   img: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: theme.avatar.size,
+    height: theme.avatar.size,
+    borderRadius: theme.borderRadius.avatar,
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
-    margin: 20,
-    elevation: 2,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.borderRadius.card,
+    padding: theme.spacing.cardPadding,
+    margin: theme.spacing.cardMargin,
+    elevation: theme.elevation.card,
   },
   cardTitle: {
     fontSize: 20,
@@ -134,33 +135,33 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cardSubtitle: {
-    fontSize: 13,
+    fontSize: theme.fontSize.subtitle,
     color: '#888',
     marginBottom: 20,
   },
   picker: {
-    borderColor: '#e0e0e0',
+    borderColor: theme.colors.border,
     borderRadius: 10,
     backgroundColor: '#f9f9f9',
     marginBottom: 16,
   },
   pickerText: {
-    fontSize: 16,
+    fontSize: theme.fontSize.body,
   },
   pickerDropdown: {
-    borderColor: '#e0e0e0',
+    borderColor: theme.colors.border,
     backgroundColor: '#f9f9f9',
   },
   button: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.button,
     paddingVertical: 14,
-    borderRadius: 15,
+    borderRadius: theme.borderRadius.button,
     alignItems: 'center',
     marginTop: 8,
   },
   buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
+    color: theme.colors.text,
+    fontSize: theme.fontSize.body,
     fontWeight: '700',
   },
 });

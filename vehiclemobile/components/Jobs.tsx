@@ -8,6 +8,7 @@ import { Params } from "../navigation/types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/SimpleLineIcons";
 import User from 'react-native-vector-icons/Feather';
+import { theme } from "../theme";
 
 interface Job {
   id: string;
@@ -87,47 +88,47 @@ export default function Jobs() {
 const styles= StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: theme.colors.background,
   },
   title: {
-    fontSize: 20,
+    fontSize: theme.fontSize.title,
     fontWeight: '700',
-    color: '#fff'
+    color: theme.colors.text
   },
   jobItem: {
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.card,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 2,
+    elevation: theme.elevation.card,
 
   },
   jobTitle: {
-    fontSize: 16
+    fontSize: theme.fontSize.body
   },
   header: {
-    backgroundColor: '#1a1a2e',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
+    backgroundColor: theme.colors.header,
+    paddingHorizontal: theme.spacing.horizontal,
+    paddingVertical: theme.spacing.vertical,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 50,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#adafb3',
+    width: theme.avatar.size,
+    height: theme.avatar.size,
+    borderRadius: theme.borderRadius.avatar,
+    backgroundColor: theme.colors.avatar,
     justifyContent: 'center',
     alignItems: 'center',
   },
   img: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: theme.avatar.size,
+    height: theme.avatar.size,
+    borderRadius: theme.borderRadius.avatar,
   },
   label: {
     width: 4,

@@ -6,6 +6,7 @@ import { launchImageLibrary } from "react-native-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Params } from "../navigation/types";
+import { theme } from "../theme";
 
 export default function Profile() {
   const {token, username, image, setImage, logout} = useAuth();
@@ -92,29 +93,29 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: theme.colors.background,
   },
   header: {
-    backgroundColor: '#1a1a2e',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
+    backgroundColor: theme.colors.header,
+    paddingHorizontal: theme.spacing.horizontal,
+    paddingVertical: theme.spacing.vertical,
   },
   headerTitle: {
-    color: '#ffffff',
+    color: theme.colors.text,
     fontSize: 14,
   },
   headerUsername: {
-    color: '#ffffff',
+    color: theme.colors.text,
     fontSize: 20,
     fontWeight: '700',
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
-    margin: 20,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.borderRadius.card,
+    padding: theme.spacing.cardPadding,
+    margin: theme.spacing.cardMargin,
     alignItems: 'center',
-    elevation: 2,
+    elevation: theme.elevation.card,
   },
   img: {
     width: 120,
@@ -133,25 +134,25 @@ const styles = StyleSheet.create({
     borderColor: '#d5d2d2'
   },
   placeholderTxt: {
-    fontSize: 13,
+    fontSize: theme.fontSize.subtitle,
     color: '#383636',
   },
   username: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1a1a2e',
+    color: theme.colors.header,
     marginBottom: 4,
   },
   button: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.button,
     paddingVertical: 12,
     paddingHorizontal: 40,
-    borderRadius: 15,
+    borderRadius: theme.borderRadius.button,
     alignItems: 'center',
     marginTop: 10
   },
   buttonTxt: {
-    color: '#ffffff',
+    color: theme.colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -160,7 +161,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#d21b1b',
     paddingVertical: 12,
     paddingHorizontal: 100,
-    borderRadius: 15,
+    borderRadius: theme.borderRadius.button,
   },
   logoutBtnTxt: {
     color: '#fff',
