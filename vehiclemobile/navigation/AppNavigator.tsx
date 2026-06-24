@@ -16,18 +16,16 @@ export default function AppNavigator() {
 
   const session = async () => {
     try {
-      const storedtoken = await AsyncStorage.getItem('token');
-      const storedIsAdmin = await AsyncStorage.getItem('isAdmin');
-      const storedUsername = await AsyncStorage.getItem('username');
-      const storedUserId = await AsyncStorage.getItem('userId');
-      const storedImage = await AsyncStorage.getItem('image');
+      const stored = await AsyncStorage.getItem('session');
+      const image = await AsyncStorage.getItem('image');
       
-      if(storedtoken) {
-        setToken(storedtoken);
-        setIsAdmin(storedIsAdmin === 'true');
-        setUsername(storedUsername ?? '');
-        setUserId(storedUserId ?? '');
-        setImage(storedImage ?? '');
+      if(stored) {
+        const session = JSON.parse(stored);
+        setToken(session.token);
+        setIsAdmin(session.isAdmin);
+        setUsername(session.username);
+        setUserId(session.userId);
+        setImage(image ?? '');
       }
     } catch (error) {
       console.log('Error restoring session', error);

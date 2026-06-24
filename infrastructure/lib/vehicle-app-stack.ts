@@ -148,11 +148,6 @@ export class VehicleAppStack extends Stack {
     missionsTable.grantReadWriteData(coreApiLambda);
     jobsTable.grantReadWriteData(coreApiLambda);
     imagesBucket.grantReadWrite(coreApiLambda);
-
-    new ses.EmailIdentity(this, 'SenderEmail', {
-      identity: ses.Identity.email(process.env.SENDER_EMAIL || '')
-    });
-
     coreApiLambda.addToRolePolicy(new iam.PolicyStatement({
       actions: ['ses:SendEmail'],
       resources: ['*']
