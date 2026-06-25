@@ -4,9 +4,8 @@ import { View, Text, StyleSheet, Alert, Image, TouchableOpacity } from "react-na
 import { API_URL } from "@env";
 import { launchImageLibrary } from "react-native-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Params } from "../navigation/types";
 import { theme } from "../theme";
+import { useFetch } from "../context/useFetch";
 
 export default function Profile() {
   const {token, username, image, setImage, logout} = useAuth();
