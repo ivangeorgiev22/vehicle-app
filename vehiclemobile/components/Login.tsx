@@ -8,6 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "@env";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
+import { theme } from "../theme";
 
 export default function Login () {
   const { setUsername, setToken, setIsAdmin, setUserId, setImage } = useAuth();
@@ -116,14 +117,15 @@ export default function Login () {
 const styles = StyleSheet.create({
   container: {
     flex: 1, 
-    justifyContent: 'center'
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background
   },
   card: {
-    backgroundColor: '#ffffff', 
-    borderRadius: 16, 
-    padding: 24, 
-    margin: 20, 
-    elevation: 2
+    backgroundColor: theme.colors.card, 
+    borderRadius: theme.borderRadius.card, 
+    padding: theme.spacing.cardPadding, 
+    margin: theme.spacing.cardMargin, 
+    elevation: theme.elevation.card
   },
   title: {
     fontSize: 28, 
@@ -145,15 +147,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#1a1a2e', 
+    backgroundColor: theme.colors.button, 
     padding: 15, 
-    borderRadius: 15, 
+    borderRadius: theme.borderRadius.button, 
     marginBottom: 30
   },
   buttonTxt: {
     textAlign: 'center', 
     fontWeight: '700', 
     fontSize: 20, 
-    color: '#fff', 
+    color: theme.colors.text, 
   }
 })
