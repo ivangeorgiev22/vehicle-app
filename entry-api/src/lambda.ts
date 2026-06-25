@@ -1,7 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import ServerlessHttp from "serverless-http";
-import { webSocketHandler } from "./websocket-lambda";
 
 let handler: any;
 
@@ -17,4 +16,3 @@ export const lambdaHandler = async (event, context) => {
   }
   return handler(event,context);
 }
-export {webSocketHandler};

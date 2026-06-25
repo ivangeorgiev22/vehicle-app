@@ -59,11 +59,12 @@ export default function Login () {
         setUserId(data.user.id);
         getImage(data.user.id, data.accessToken);
 
-        // save for persistence
-        await AsyncStorage.setItem('token', data.accessToken);
-        await AsyncStorage.setItem('isAdmin', JSON.stringify(data.isAdmin));
-        await AsyncStorage.setItem('username', username);
-        await AsyncStorage.setItem('userId', data.user.id);
+        await AsyncStorage.setItem('session', JSON.stringify({
+          token: data.accessToken,
+          isAdmin: data.IsAdmin,
+          username: username,
+          userId: data.user.id,
+        }))
 
         if (data.isAdmin) {
           navigation.navigate('Home');

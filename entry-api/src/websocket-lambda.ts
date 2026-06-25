@@ -3,13 +3,17 @@ import { AppModule } from "./app.module";
 import { JobsGateway } from "./jobs/jobs.gateway";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { JwtService } from "@nestjs/jwt";
+import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 
-let jobsGateway: JobsGateway
+let jobsGateway: JobsGateway;
+let jwtService: JwtService;
 const dynamoDbCli = DynamoDBDocumentClient.from(new DynamoDBClient());
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
   jobsGateway = app.get(JobsGateway);
+  jwtService = app.get(JwtService);
 }
 
 export const webSocketHandler = async(event: any) => {
@@ -34,10 +38,20 @@ export const webSocketHandler = async(event: any) => {
   if(routeKey === '$default') {
     console.log('$default triggered, body:', event.body);
     const body = event.body ? JSON.parse(event.body) : {};
+    try {
+      jwtService.verify(body.token);
+    } catch {
+      const apiClient = new ApiGatewayManagementApiClient({endpoint: process.env.WEBSOCKET_ENDPOINT});
+      await apiClient.send(new PostToConnectionCommand({
+        ConnectionId: connectionId,
+        Data: JSON.stringify({type: 'auth:expired'})
+      }));
+      return {statusCode: 200, body: 'OK'};
+    }
     if (body.action === 'getBacklogJobs') {
       await jobsGateway.sendJobs(connectionId);
     }
-    return {statusCode: 200, body: 'OK'}
+    return {statusCode: 200, body: 'OK'};
   }
 
   if(routeKey === '$disconnect') {

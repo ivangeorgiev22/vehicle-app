@@ -21,10 +21,11 @@ export default function JobDetails() {
   const { id } = route.params as {id: string}; //typed unknown by default so assure typescript there is a valid id
   const [tasks, setTasks] = useState<Task[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
+  const callApi = useFetch();
 
   const fetchJob = async () => {
     try {
-      const res = await fetch(`${API_URL}/jobs/${id}`, {
+      const res = await callApi(`${API_URL}/jobs/${id}`, {
         headers: {'Authorization': `Bearer ${token}`}
       });
 
@@ -39,7 +40,7 @@ export default function JobDetails() {
 
   const updateTaskStatus = async (key: string, task_status: 'Accepted' | 'Completed') => {
     try {
-      const res = await fetch(`${API_URL}/jobs/${id}/task/${key}/status`, {
+      const res = await callApi(`${API_URL}/jobs/${id}/task/${key}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

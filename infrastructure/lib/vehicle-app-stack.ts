@@ -11,6 +11,7 @@ import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwv2integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ses from 'aws-cdk-lib/aws-ses';
+import * as logs from 'aws-cdk-lib/aws-logs';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -49,7 +50,6 @@ export class VehicleAppStack extends Stack {
       partitionKey: { name: 'mission_id', type: dynamodb.AttributeType.STRING }
     });
 
-    //WebSocket connections table
     const connectionsTable = new dynamodb.Table(this, 'ConnectionsTable', {
       tableName: `connections-${env}`,
       partitionKey: {name: 'connectionId', type: dynamodb.AttributeType.STRING},
@@ -57,13 +57,11 @@ export class VehicleAppStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY
     });
 
-    // S3 bucket reference
     const imagesBucket = new s3.Bucket(this, `operator-images-bucket-${env}`, {
       bucketName: `operator-images-bucket-${env}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY
     });
-
 
     // API Gateway
     const restApi = new apigateway.RestApi(this, 'VehicleAppApi', {
@@ -84,26 +82,32 @@ export class VehicleAppStack extends Stack {
     // which would create a circular dependency (Lambda ← Stage ← Methods ← Lambda).
     const apiUrl = `https://${restApi.restApiId}.execute-api.${this.region}.amazonaws.com/${env}/`;
 
-    //creates websocket api in aws - accepts connections from clients etc
+
     const webSocketApi = new apigwv2.WebSocketApi(this, 'VehicleAppWebSocket', {
       apiName: `vehicle-app-websocket-${env}`
     });
-    //creates url client connects to 
     const webSocketStage = new apigwv2.WebSocketStage(this, 'VehicleAppWebSocketStage', {
       webSocketApi,
       stageName: env,
       autoDeploy: true
     });
 
-     //callback URL
-    const webSocketUrl = `https://${webSocketApi.apiId}.execute-api.${this.region}.amazonaws.com/${env}`
+    const webSocketLogGroup = new logs.LogGroup(this, 'WebSocketLogGroup', {
+      logGroupName: `websocket-lambda-logs-${env}`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
+    const webSocketUrl = `https://${webSocketApi.apiId}.execute-api.${this.region}.amazonaws.com/${env}`;
 
     const webSocketLambda = new lambda.Function(this, 'WebSocketLambda', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'dist/lambda.webSocketHandler',
+      functionName: `websocket-lambda-${env}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'dist/websocket-lambda.webSocketHandler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../entry-api')),
       timeout: Duration.seconds(30),
       memorySize: 256,
+      logGroup: webSocketLogGroup,
       environment: {
         NODE_ENV: env,
         CONNECTIONS_TABLE: connectionsTable.tableName,
@@ -115,13 +119,21 @@ export class VehicleAppStack extends Stack {
       }
     });
 
+    const coreApiLogGroup = new logs.LogGroup(this, 'CoreApiLambdaLogGroup', {
+      logGroupName: `core-api-lambda-logs-${env}`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
     // Core Lambda
     const coreApiLambda = new lambda.Function(this, 'CoreApiLambda', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      functionName: `core-api-lambda-${env}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'dist/lambda.lambdaHandler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../core-api')),
       timeout: Duration.seconds(30),
       memorySize: 256,
+      logGroup: coreApiLogGroup,
       environment: {
         NODE_ENV: env,
         S3_BUCKET_NAME: imagesBucket.bucketName,
@@ -136,24 +148,26 @@ export class VehicleAppStack extends Stack {
     missionsTable.grantReadWriteData(coreApiLambda);
     jobsTable.grantReadWriteData(coreApiLambda);
     imagesBucket.grantReadWrite(coreApiLambda);
-
-    //email identity setup
-    new ses.EmailIdentity(this, 'SenderEmail', {
-      identity: ses.Identity.email(process.env.SENDER_EMAIL || '')
-    })
-
     coreApiLambda.addToRolePolicy(new iam.PolicyStatement({
       actions: ['ses:SendEmail'],
       resources: ['*']
     }));
 
+    const entryApiLogGroup = new logs.LogGroup(this, 'EntryApiLogGroup', {
+      logGroupName: `entry-api-lambda-logs-${env}`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
     // Entry Lambda
     const entryApiLambda = new lambda.Function(this, 'EntryApiLambda', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      functionName: `entry-api-lambda-${env}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'dist/lambda.lambdaHandler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../entry-api')),
       timeout: Duration.seconds(30),
       memorySize: 256,
+      logGroup: entryApiLogGroup,
       environment: {
         NODE_ENV: env,
         BASE_URL: apiUrl,
@@ -173,10 +187,10 @@ export class VehicleAppStack extends Stack {
     webSocketLambda.addPermission('WebSocketConnectPermission', {
       principal: new iam.ServicePrincipal('apigateway.amazonaws.com'),
       sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${webSocketApi.apiId}/*/*`
-    })
+    });
 
     const webSocketIntegration = new apigwv2integrations.WebSocketLambdaIntegration('WebSocketIntegration', webSocketLambda);
-    //WebSocket Routes
+
     webSocketApi.addRoute('$connect', {
       integration: webSocketIntegration
     });
@@ -184,11 +198,9 @@ export class VehicleAppStack extends Stack {
       integration: webSocketIntegration
     });
     webSocketApi.addRoute('$default', {
-      integration: webSocketIntegration,
-      returnResponse: true
+      integration: webSocketIntegration
     });
 
-    // Routes
     const coreResource = restApi.root.addResource('api');
     const coreIntegration = new apigateway.LambdaIntegration(coreApiLambda, { proxy: true });
     const entryIntegration = new apigateway.LambdaIntegration(entryApiLambda, { proxy: true });

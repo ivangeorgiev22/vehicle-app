@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode}) {
     setIsAdmin(false);
     setUserId('');
     setImage('');
-    AsyncStorage.removeMany(['token', 'isAdmin', 'username', 'userId', 'image'])
+    AsyncStorage.removeItem('session');
   }
 
   return (

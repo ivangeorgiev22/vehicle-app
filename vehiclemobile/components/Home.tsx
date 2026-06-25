@@ -22,10 +22,11 @@ export default function Home () {
     {label: 'Fly Doctor', value: 'Fly Doctor'},
     {label: 'Maintenance', value: 'Maintenance'}
   ]);
+  const callApi = useFetch();
 
   const createMission = async () => {
     try {
-      const res = await fetch(`${API_URL}/missions`, {
+      const res = await callApi(`${API_URL}/missions`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
         body: JSON.stringify({mission_type: missionType})
