@@ -10,6 +10,7 @@ import { entryApiEndpoints } from './constants/entry-endpoints';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwv2integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as ses from 'aws-cdk-lib/aws-ses';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -126,7 +127,8 @@ export class VehicleAppStack extends Stack {
         S3_BUCKET_NAME: imagesBucket.bucketName,
         USERS_TABLE: usersTable.tableName,
         MISSIONS_TABLE: missionsTable.tableName,
-        JOBS_TABLE: jobsTable.tableName
+        JOBS_TABLE: jobsTable.tableName,
+        SENDER_EMAIL: process.env.SENDER_EMAIL || '',
       }
     });
 
@@ -134,6 +136,16 @@ export class VehicleAppStack extends Stack {
     missionsTable.grantReadWriteData(coreApiLambda);
     jobsTable.grantReadWriteData(coreApiLambda);
     imagesBucket.grantReadWrite(coreApiLambda);
+
+    //email identity setup
+    new ses.EmailIdentity(this, 'SenderEmail', {
+      identity: ses.Identity.email(process.env.SENDER_EMAIL || '')
+    })
+
+    coreApiLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ses:SendEmail'],
+      resources: ['*']
+    }));
 
     // Entry Lambda
     const entryApiLambda = new lambda.Function(this, 'EntryApiLambda', {

@@ -7,10 +7,11 @@ import { DynamoDBService } from "../database/dynamodb.service";
 import { PutCommand, QueryCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { Job } from "../jobs/interfaces/job.interface";
 import { randomUUID } from "crypto";
+import { EmailService } from "../emails/email.service";
 
 @Injectable()
 export class MissionsService {
-  constructor(private dbService: DynamoDBService, private jobsService: JobsService) {}
+  constructor(private dbService: DynamoDBService, private jobsService: JobsService, private emailService: EmailService) {}
 
   async create(req: CreateMissionRequest): Promise<Mission | undefined> {
     const db = this.dbService.getDb();
@@ -26,10 +27,10 @@ export class MissionsService {
       Item: mission
     }));
 
-    await this.jobsService.createJob(id, req.mission_type)
+    const jobs = await this.jobsService.createJob(id, req.mission_type);
+    await this.emailService.sendEmail(req.mission_type, id, jobs);
 
-    return mission
-
+    return mission;
   };
 
   async findOne(id: string): Promise<MissionWithJobs | null> {
