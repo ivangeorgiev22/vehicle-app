@@ -14,12 +14,7 @@ export class ApiClient {
     const res = await axios.post(`${this.baseUrl}/api/users/validate`, {username, password});
     return res.data;
   }
-
-  async createMission(mission_type: string): Promise<Mission> {
-    const res = await axios.post(`${this.baseUrl}/api/missions`, {mission_type});
-    return res.data;
-  }
-
+  
   async getMission(id: string): Promise<MissionWithJobs> {
     const res = await axios.get(`${this.baseUrl}/api/missions/${id}`);
     return res.data;
