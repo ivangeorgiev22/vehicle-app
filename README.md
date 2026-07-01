@@ -55,3 +55,13 @@ In a separate terminal, run android:
 cd vehiclemobile
 npm run android
 ```
+## Default Users
+- Two users are automatically seeded on first deployment. Their credentials are configured in `infrastructure/.env` . Check `infrastructure/.env.example` for more info on users config.
+
+## Generating a Hashed Password
+- If you need to manually generate a hashed password:
+```
+cd infrastructure
+npm run hash-password <yourpassword>
+```
+

@@ -15,7 +15,7 @@ import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { emailTemplate } from '../templates/email-template';
 import * as cr from 'aws-cdk-lib/custom-resources';
-import * as bcrypt from 'bcrypt';
+import { users } from './seed/users';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -74,53 +74,21 @@ export class VehicleAppStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY
     });
 
-    const password = bcrypt.hashSync('123456', 10);
-
-    new cr.AwsCustomResource(this, 'SeedAdmin', {
+    new cr.AwsCustomResource(this, 'SeedUsers', {
       onCreate: {
         service: 'DynamoDB',
-        action: 'putItem',
+        action: 'batchWriteItem',
         parameters: {
-          TableName: usersTable.tableName,
-          Item: {
-            id: {S: 'admin-001'},
-            username: {S: 'admin'},
-            password: {S: password},
-            firstName: {S: 'admin'},
-            lastName: {S: 'admin'},
-            email: {S: 'admin@test.com'},
-            role: {S: 'ADMIN'}
+          RequestItems: {
+            [usersTable.tableName]: users
           }
         },
-        physicalResourceId: cr.PhysicalResourceId.of('seed-admin')
+        physicalResourceId: cr.PhysicalResourceId.of('seed-users')
       },
       policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
         resources: [usersTable.tableArn]
       })
-    });
-
-    new cr.AwsCustomResource(this, 'SeedOperator', {
-      onCreate: {
-        service: 'DynamoDB',
-        action: 'putItem',
-        parameters: {
-          TableName: usersTable.tableName,
-          Item: {
-            id: {S: 'operator-001'},
-            username: {S: 'operator'},
-            password: {S: password},
-            firstName: {S: 'operator'},
-            lastName: {S: 'operator'},
-            email: {S: 'operator@test.com'},
-            role: {S: 'OPERATOR'}
-          }
-        },
-        physicalResourceId: cr.PhysicalResourceId.of('seed-operator')
-      },
-      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
-        resources: [usersTable.tableArn]
-      })
-    });
+    })
 
     // API Gateway
     const restApi = new apigateway.RestApi(this, 'VehicleAppApi', {
