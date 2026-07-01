@@ -19,14 +19,22 @@ execSync(
 const outputs = JSON.parse(fs.readFileSync(OUTPUTS_FILE, 'utf8'));
 const stackOutputs = Object.values(outputs)[0];
 const apiUrl = stackOutputs?.ApiUrl;
+const webSocketUrl = stackOutputs.WebSocketUrl;
 
 if (!apiUrl) {
   console.error('Could not find ApiUrl in cdk-outputs.json.');
   process.exit(1);
 }
 
+if (!webSocketUrl) {
+  console.error('Could not find WebSocketUrl in cdk-outputs.json.');
+  process.exit(1);
+}
+
 let envContent = fs.readFileSync(ENV_FILE, 'utf8');
 envContent = envContent.replace(/^API_URL\s*=.*/m, `API_URL=${apiUrl}`);
+envContent = envContent.replace(/^WEBSOCKET_URL\s*=.*/m, `WEBSOCKET_URL=${webSocketUrl}`);
 fs.writeFileSync(ENV_FILE, envContent);
 
 console.log(`Updated API_URL in vehiclemobile/.env to: ${apiUrl}`);
+console.log(`Updated WEBSOCKET_URL in vehiclemobile/.env to: ${webSocketUrl}`);

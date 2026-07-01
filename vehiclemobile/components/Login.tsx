@@ -61,7 +61,7 @@ export default function Login () {
 
         await AsyncStorage.setItem('session', JSON.stringify({
           token: data.accessToken,
-          isAdmin: data.IsAdmin,
+          isAdmin: data.isAdmin,
           username: username,
           userId: data.user.id,
         }))

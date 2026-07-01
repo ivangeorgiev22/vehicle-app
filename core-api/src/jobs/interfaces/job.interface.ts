@@ -12,6 +12,8 @@ export interface JobTemplate {
 export interface Job {
   id: string;
   mission_id: number;
+  vehicle_id?: string;
+  plate?: string;
   job_title: string;
   job_status: string;
   tasks: Task[];

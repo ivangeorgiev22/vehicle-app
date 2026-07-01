@@ -30,4 +30,8 @@ export class DynamoDBService implements OnModuleInit {
   getJobsTable(): string {
     return process.env.JOBS_TABLE || 'jobs';
   }
+
+  getVehiclesTable(): string {
+    return process.env.VEHICLES_TABLE || 'vehicles'
+  }
 }

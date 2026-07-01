@@ -61,6 +61,13 @@ export class VehicleAppStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY
     });
 
+    const vehiclesTable = new dynamodb.Table(this, 'VehiclesTable', {
+      tableName: `vehicles-${env}`,
+      partitionKey: {name: 'vehicleId', type: dynamodb.AttributeType.STRING},
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
     const imagesBucket = new s3.Bucket(this, `operator-images-bucket-${env}`, {
       bucketName: `operator-images-bucket-${env}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -193,6 +200,7 @@ export class VehicleAppStack extends Stack {
         MISSIONS_TABLE: missionsTable.tableName,
         JOBS_TABLE: jobsTable.tableName,
         SENDER_EMAIL: process.env.SENDER_EMAIL || '',
+        VEHICLES_TABLE: vehiclesTable.tableName
       }
     });
 
@@ -200,6 +208,7 @@ export class VehicleAppStack extends Stack {
     missionsTable.grantReadWriteData(coreApiLambda);
     jobsTable.grantReadWriteData(coreApiLambda);
     imagesBucket.grantReadWrite(coreApiLambda);
+    vehiclesTable.grantReadWriteData(coreApiLambda);
 
     const entryApiLogGroup = new logs.LogGroup(this, 'EntryApiLogGroup', {
       logGroupName: `entry-api-lambda-logs-${env}`,
@@ -221,7 +230,8 @@ export class VehicleAppStack extends Stack {
         JWT_SECRET: process.env.JWT_SECRET || '',
         CONNECTIONS_TABLE: connectionsTable.tableName,
         JOBS_TABLE: jobsTable.tableName,
-        WEBSOCKET_ENDPOINT: webSocketUrl
+        WEBSOCKET_ENDPOINT: webSocketUrl,
+        TOKEN_EXPIRY: process.env.TOKEN_EXPIRY || '1h'
       }
     });
 
@@ -245,6 +255,27 @@ export class VehicleAppStack extends Stack {
       }
     });
     missionsTable.grantReadWriteData(createMissionLambda);
+
+    const updateVehicleLogs = new logs.LogGroup(this, 'UpdateVehicleLogs', {
+      logGroupName: `update-vehicle-logs-${env}`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
+    const updateVehicleLambda = new lambda.Function(this, 'UpdateVehicleLambda', {
+      functionName: `update-vehicle-lambda-${env}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'dist/update-vehicle-lambda.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../core-api')),
+      timeout: Duration.seconds(30),
+      memorySize: 256,
+      logGroup: updateVehicleLogs,
+      environment: {
+        NODE_ENV: env,
+        VEHICLES_TABLE: vehiclesTable.tableName
+      }
+    });
+    vehiclesTable.grantReadWriteData(updateVehicleLambda);
 
     const createJobsLogs = new logs.LogGroup(this, 'CreateJobsLogs', {
       logGroupName: `create-jobs-logs-${env}`,
@@ -273,7 +304,12 @@ export class VehicleAppStack extends Stack {
     });
 
     const isMissionCreated = new sfn.Choice(this, 'isMissionCreated');
-    const condition = sfn.Condition.isPresent('$.id');
+    const idPresent = sfn.Condition.isPresent('$.id');
+
+    const updateVehicleTask = new tasks.LambdaInvoke(this, 'UpdateVehicle', {
+      lambdaFunction: updateVehicleLambda,
+      outputPath: '$.Payload'
+    });
 
     const createJobsTask = new tasks.LambdaInvoke(this, 'CreateJobs', {
       lambdaFunction: createJobsLambda,
@@ -310,7 +346,8 @@ export class VehicleAppStack extends Stack {
 
     const definition = createMissionTask
     .next(isMissionCreated
-      .when(condition, createJobsTask
+      .when(idPresent, updateVehicleTask
+        .next(createJobsTask)
         .next(sendEmailTask)
         .next(missionCreated)
       )
@@ -381,7 +418,7 @@ export class VehicleAppStack extends Stack {
     generateRoutes(restApi.root, entryApiEndpoints, entryIntegration);
 
     new CfnOutput(this, 'ApiUrl', {
-      value: restApi.url,
+      value: restApi.url.replace(/\/$/, ''),
       description: 'API Gateway URL'
     });
 

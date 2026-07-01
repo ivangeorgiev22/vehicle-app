@@ -81,10 +81,25 @@ export class JobsService {
       }
     }));
 
-    return (jobs.Items || []).map(job => ({
+    const jobsWithTasks = (jobs.Items || []).map(job => ({
       ...job,
       tasks: typeof job.tasks === 'string' ? JSON.parse(job.tasks) : job.tasks
     })) as Job[];
+
+    const jobWithVehicle = await Promise.all(
+      jobsWithTasks.map(async (job) => {
+        if (!job.vehicle_id) return job;
+        const vehicle = await db.send(new GetCommand({
+          TableName: this.dbService.getVehiclesTable(),
+          Key: {vehicleId: job.vehicle_id}
+        }));
+        return {
+          ...job,
+          plate: vehicle.Item?.plate || null
+        }
+      })
+    )
+    return jobWithVehicle;
   }
 
   async getJobById(id: string): Promise<Job | null> {

@@ -14,7 +14,7 @@ export class ApiClient {
     const res = await axios.post(`${this.baseUrl}/api/users/validate`, {username, password});
     return res.data;
   }
-  
+
   async getMission(id: string): Promise<MissionWithJobs> {
     const res = await axios.get(`${this.baseUrl}/api/missions/${id}`);
     return res.data;
@@ -60,6 +60,21 @@ export class ApiClient {
 
   async getImage (id: string): Promise<{image_url: string | null}> {
     const res = await axios.get(`${this.baseUrl}/api/users/${id}/image`);
+    return res.data;
+  }
+
+  async createVehicle(plate: string, battery: number) {
+    const res = await axios.post(`${this.baseUrl}/api/vehicles`, {plate, battery});
+    return res.data;
+  }
+
+  async getVehicles() {
+    const res = await axios.get(`${this.baseUrl}/api/vehicles`);
+    return res.data;
+  }
+
+  async updateVehicleStatus(vehicleId: string, vehicle_status: string) {
+    const res = await axios.patch(`${this.baseUrl}/api/vehicles/${vehicleId}/status`, {vehicle_status});
     return res.data;
   }
 }

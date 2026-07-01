@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     elevation: theme.elevation.card,
   },
   taskDesc: {
-    fontSize: 20,
+    fontSize: theme.fontSize.body,
   },
   taskStatus: {
     fontSize: theme.fontSize.subtitle,
@@ -143,6 +143,7 @@ const styles = StyleSheet.create({
     padding: 10,
     alignItems: 'center',
     alignSelf: 'flex-end',
+    marginLeft: 5
   },
   buttonTxt: {
     color: theme.colors.text
