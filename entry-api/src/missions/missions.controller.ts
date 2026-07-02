@@ -16,7 +16,7 @@ export class MissionsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
-  async create(@Body() req: CreateMissionRequest): Promise<Mission> {
+  async create(@Body() req: CreateMissionRequest): Promise<void> {
     return await this.missionsService.create(req);
   }
 

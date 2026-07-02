@@ -1,40 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import { mission_templates } from "./job-templates";
 import { UpdateJobStatus } from "./interfaces/UpdateJobStatus";
 import { Job, Task } from "./interfaces/job.interface";
 import { DynamoDBService } from "../database/dynamodb.service";
-import { GetCommand, PutCommand, ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import { randomUUID } from "crypto";
+import { GetCommand, ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
 
 @Injectable()
 export class JobsService {
   constructor (private dbService: DynamoDBService) {}
-
-  async createJob (mission_id: string, mission_type: string): Promise<Job[]> {
-    const db = this.dbService.getDb();
-    const jobs = mission_templates[mission_type];
-    const id = randomUUID();
-    const createdJobs: Job[] = [];
-
-    for (const job of jobs) {
-      await db.send(new PutCommand({
-        TableName: this.dbService.getJobsTable(),
-        Item: { 
-          id,
-          mission_id,
-          job_title: job.job_title,
-          job_status: 'Backlog',
-          tasks: JSON.stringify(job.tasks)
-        }
-      }));
-      createdJobs.push({
-        ...job,
-        tasks: job.tasks
-      } as Job)
-    }
-    return createdJobs;
-  }
 
   async updateJobStatus (id: string, req: UpdateJobStatus): Promise<Job | null | undefined> {
     const db = this.dbService.getDb();

@@ -10,8 +10,12 @@ import { entryApiEndpoints } from './constants/entry-endpoints';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwv2integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as ses from 'aws-cdk-lib/aws-ses';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
+import { emailTemplate } from '../templates/email-template';
+import * as cr from 'aws-cdk-lib/custom-resources';
+import * as bcrypt from 'bcrypt';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -61,6 +65,54 @@ export class VehicleAppStack extends Stack {
       bucketName: `operator-images-bucket-${env}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY
+    });
+
+    const password = bcrypt.hashSync('123456', 10);
+
+    new cr.AwsCustomResource(this, 'SeedAdmin', {
+      onCreate: {
+        service: 'DynamoDB',
+        action: 'putItem',
+        parameters: {
+          TableName: usersTable.tableName,
+          Item: {
+            id: {S: 'admin-001'},
+            username: {S: 'admin'},
+            password: {S: password},
+            firstName: {S: 'admin'},
+            lastName: {S: 'admin'},
+            email: {S: 'admin@test.com'},
+            role: {S: 'ADMIN'}
+          }
+        },
+        physicalResourceId: cr.PhysicalResourceId.of('seed-admin')
+      },
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [usersTable.tableArn]
+      })
+    });
+
+    new cr.AwsCustomResource(this, 'SeedOperator', {
+      onCreate: {
+        service: 'DynamoDB',
+        action: 'putItem',
+        parameters: {
+          TableName: usersTable.tableName,
+          Item: {
+            id: {S: 'operator-001'},
+            username: {S: 'operator'},
+            password: {S: password},
+            firstName: {S: 'operator'},
+            lastName: {S: 'operator'},
+            email: {S: 'operator@test.com'},
+            role: {S: 'OPERATOR'}
+          }
+        },
+        physicalResourceId: cr.PhysicalResourceId.of('seed-operator')
+      },
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [usersTable.tableArn]
+      })
     });
 
     // API Gateway
@@ -148,17 +200,12 @@ export class VehicleAppStack extends Stack {
     missionsTable.grantReadWriteData(coreApiLambda);
     jobsTable.grantReadWriteData(coreApiLambda);
     imagesBucket.grantReadWrite(coreApiLambda);
-    coreApiLambda.addToRolePolicy(new iam.PolicyStatement({
-      actions: ['ses:SendEmail'],
-      resources: ['*']
-    }));
 
     const entryApiLogGroup = new logs.LogGroup(this, 'EntryApiLogGroup', {
       logGroupName: `entry-api-lambda-logs-${env}`,
       retention: logs.RetentionDays.ONE_WEEK,
       removalPolicy: RemovalPolicy.DESTROY
     });
-
     // Entry Lambda
     const entryApiLambda = new lambda.Function(this, 'EntryApiLambda', {
       functionName: `entry-api-lambda-${env}`,
@@ -177,6 +224,112 @@ export class VehicleAppStack extends Stack {
         WEBSOCKET_ENDPOINT: webSocketUrl
       }
     });
+
+    const createMissionLogs = new logs.LogGroup(this, 'CreateMissionLogs', {
+      logGroupName: `create-mission-logs-${env}`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY
+    })
+
+    const createMissionLambda = new lambda.Function(this, 'CreateMissionLambda', {
+      functionName: `create-mission-lambda-${env}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'dist/create-mission-lambda.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../core-api')),
+      timeout: Duration.seconds(30),
+      memorySize: 256,
+      logGroup: createMissionLogs,
+      environment: {
+        NODE_ENV: env,
+        MISSIONS_TABLE: missionsTable.tableName
+      }
+    });
+    missionsTable.grantReadWriteData(createMissionLambda);
+
+    const createJobsLogs = new logs.LogGroup(this, 'CreateJobsLogs', {
+      logGroupName: `create-jobs-logs-${env}`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
+    const createJobsLambda = new lambda.Function(this, 'CreateJobsLambda', {
+      functionName: `create-jobs-lambda-${env}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'dist/create-jobs-lambda.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../core-api')),
+      timeout: Duration.seconds(30),
+      memorySize: 256,
+      logGroup: createJobsLogs,
+      environment: {
+        NODE_ENV: env,
+        JOBS_TABLE: jobsTable.tableName
+      }
+    });
+    jobsTable.grantReadWriteData(createJobsLambda);
+
+    const createMissionTask = new tasks.LambdaInvoke(this, 'CreateMission', {
+      lambdaFunction: createMissionLambda,
+      outputPath: '$.Payload',
+    });
+
+    const isMissionCreated = new sfn.Choice(this, 'isMissionCreated');
+    const condition = sfn.Condition.isPresent('$.id');
+
+    const createJobsTask = new tasks.LambdaInvoke(this, 'CreateJobs', {
+      lambdaFunction: createJobsLambda,
+      outputPath: '$.Payload'
+    });
+
+    const sendEmailTask = new tasks.CallAwsService(this, 'SendEmail', {
+      service: 'sesv2',
+      action: 'sendEmail',
+      parameters: {
+        FromEmailAddress: process.env.SENDER_EMAIL,
+        Destination: {
+          ToAddresses: [process.env.SENDER_EMAIL]
+        },
+        Content: {
+          Simple: {
+            Subject: {
+              'Data.$': "States.Format('New Mission: {}', $.mission_type)"
+            },
+            Body: {
+              Html: {
+                'Data.$': emailTemplate
+              }
+            }
+          }
+        }
+      },
+      iamResources: ['*'],
+      resultPath: sfn.JsonPath.DISCARD
+    });
+
+    const missionCreated = new sfn.Succeed(this, 'MissionCreated');
+    const missionFailed = new sfn.Fail(this, 'MissionCreationFailed');
+
+    const definition = createMissionTask
+    .next(isMissionCreated
+      .when(condition, createJobsTask
+        .next(sendEmailTask)
+        .next(missionCreated)
+      )
+      .otherwise(missionFailed)
+    );
+
+    const missionStateMachine = new sfn.StateMachine(this, 'MissionStateMachine', {
+      stateMachineName: `mission-creation-${env}`,
+      definitionBody: sfn.DefinitionBody.fromChainable(definition),
+      stateMachineType: sfn.StateMachineType.STANDARD
+    });
+    missionStateMachine.grantStartExecution(entryApiLambda);
+    entryApiLambda.addEnvironment('STATE_MACHINE_ARN', missionStateMachine.stateMachineArn);
+    missionStateMachine.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ses:SendEmail'],
+      resources: ['*']
+    }));
+
+
     connectionsTable.grantReadWriteData(entryApiLambda);
     jobsTable.grantReadWriteData(entryApiLambda);
 

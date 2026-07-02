@@ -4,18 +4,19 @@ import { CreateMissionRequest } from "./models/create-mission";
 import { UpdateMission } from "./models/update-mission";
 import { Mission, MissionWithJobs } from "./interfaces/missions-interface";
 import { JobsGateway } from "../jobs/jobs.gateway";
+import {SFNClient, StartExecutionCommand} from '@aws-sdk/client-sfn';
 
 @Injectable()
 export class MissionsService {
   constructor(private coreApi: ApiClient, private jobsGateway: JobsGateway) {}
+  private sfnClient = new SFNClient();
 
-  async create(req: CreateMissionRequest): Promise<Mission> {
-    console.log('Creating mission, broadcastjobs next')
-    const mission = await this.coreApi.createMission(req.mission_type);
-    console.log('mission created, calling broadcastJobs');
+  async create(req: CreateMissionRequest): Promise<void> {
+    await this.sfnClient.send(new StartExecutionCommand({
+      stateMachineArn: process.env.STATE_MACHINE_ARN,
+      input: JSON.stringify({mission_type: req.mission_type})
+    }));
     await this.jobsGateway.broadcastJobs();
-    console.log('broadcastJobs called');
-    return mission;
   }
 
   findOne(id: string): Promise<MissionWithJobs> {
