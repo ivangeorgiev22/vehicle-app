@@ -64,4 +64,5 @@ npm run android
 cd infrastructure
 npm run hash-password <yourpassword>
 ```
-
+## Architecture
+![Architecture Diagram](docs/Vehicle%20App%20Architecture%20Diagram.drawio.png)

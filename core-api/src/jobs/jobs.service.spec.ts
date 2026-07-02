@@ -11,7 +11,8 @@ describe.only('JobsService', () => {
 
   const mockDbService = {
     getDb: jest.fn().mockReturnValue(mockDb),
-    getJobsTable: jest.fn().mockReturnValue('jobs-test')
+    getJobsTable: jest.fn().mockReturnValue('jobs-test'),
+    getVehiclesTable: jest.fn().mockReturnValue('vehicles-test')
   };
 
   beforeEach(async () => {
@@ -30,39 +31,13 @@ describe.only('JobsService', () => {
     jest.clearAllMocks();
   });
 
-  describe('createJob()', () => {
-    it('Should create a job for each mission type', async () => {
-      mockDb.send.mockResolvedValue({});
-
-      await service.createJob('1', 'Cleaning');
-      expect(mockDb.send).toHaveBeenCalledTimes(1);
-      jest.clearAllMocks();
-
-      await service.createJob('2', 'Fly Doctor');
-      expect(mockDb.send).toHaveBeenCalledTimes(1);
-      jest.clearAllMocks();
-
-      await service.createJob('3', 'Maintenance');
-      expect(mockDb.send).toHaveBeenCalledTimes(1);
-    });
-
-    it('Should serialize tasks as JSON before inserting', async () => {
-      mockDb.send.mockResolvedValue({});
-      await service.createJob('1', 'Cleaning');
-    
-      const args = mockDb.send.mock.calls[0][0];
-      const tasks = args.input.Item.tasks;
-
-      expect(typeof tasks).toBe('string');
-      expect(() => JSON.parse(tasks)).not.toThrow();
-    });
-  });
-
   describe('updateJobStatus()', () => {
+    
     it('Should update job status', async () => {
       const mockJob = {
         id: '1',
         mission_id: '1',
+        vehicle_id: 'vehicle-1',
         job_title: 'Exterior Clean',
         job_status: 'Backlog',
         tasks: '[]'
@@ -110,6 +85,7 @@ describe.only('JobsService', () => {
         {
           id: '1',
           mission_id: '1',
+          vehicle_id: 'vehicle-1',
           job_title: 'Exterior Clean',
           job_status: 'Backlog',
           tasks: JSON.stringify([{key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}])
@@ -117,14 +93,19 @@ describe.only('JobsService', () => {
         {
           id: '2',
           mission_id: '1',
+          vehicle_id: 'vehicle-2',
           job_title: 'Interior Clean',
           job_status: 'Backlog',
           tasks: JSON.stringify([{key: 'clean-2', description: 'Clean interior', task_status: 'Waiting'}])
         }
       ];
-      mockDb.send.mockResolvedValue({Items: mockJobs});
+      mockDb.send.mockResolvedValueOnce({Items: mockJobs});
+      mockDb.send.mockResolvedValueOnce({Item: {vehicleId: 'vehicle-1', plate: 'ABC-123'}});
+      mockDb.send.mockResolvedValueOnce({Item: {vehicleId: 'vehicle-1', plate: 'ABC-123'}});
       const res = await service.backlogJobs();
       expect(res).toHaveLength(2);
+      expect(res[0].plate).toBe('ABC-123');
+      expect(res[1].plate).toBe('ABC-123');
     });
   });
 

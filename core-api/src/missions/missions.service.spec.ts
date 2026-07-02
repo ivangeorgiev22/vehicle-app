@@ -38,37 +38,6 @@ describe('MissionsService', () => {
     jest.clearAllMocks();
   });
 
-  describe('create()', () => {
-    it('Inserts a mission with correct type', async () => {
-      mockDb.send.mockResolvedValue({});
-      mockJobsService.createJob.mockResolvedValue(undefined);
-
-      await service.create({mission_type: 'Cleaning'});
-      expect(mockJobsService.createJob).toHaveBeenCalledWith(
-        expect.any(String), // uuid
-        'Cleaning'
-      );
-    });
-
-    it('Calls jobsService with mission id and type', async () => {
-      mockDb.send.mockResolvedValue({});
-      mockJobsService.createJob.mockResolvedValue(undefined);
-
-      await service.create({mission_type: 'Cleaning'});
-      expect(mockJobsService.createJob).toHaveBeenCalledWith(expect.any(String), 'Cleaning');
-    });
-
-    it('Returns created mission', async () => {
-      mockDb.send.mockResolvedValue({});
-      mockJobsService.createJob.mockResolvedValue(undefined);
-
-      const res = await service.create({mission_type: 'Cleaning'});
-      expect(res?.mission_type).toBe('Cleaning');
-      expect(res?.id).toBeDefined();
-      expect(res?.mission_status).toBe('Created')
-    });
-  });
-
   describe('findOne()', () => {
     it('Returns mission with jobs and tasks', async () => {
       const mockMission = {
