@@ -42,18 +42,18 @@ describe('MissionsService', () => {
     it('Returns mission with jobs and tasks', async () => {
       const mockMission = {
         id: '1',
-        mission_type: 'Cleaning',
-        mission_status: 'Created'
+        missionType: 'Cleaning',
+        missionStatus: 'Created'
       };
       
       const mockJob = [
         {
           id: '1',
-          mission_id: '1',
-          job_title: 'Exterior Clean',
-          job_status: 'Backlog',
+          missionId: '1',
+          jobTitle: 'Exterior Clean',
+          jobStatus: 'Backlog',
           tasks: JSON.stringify([
-            {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}
+            {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
           ])
         }
       ];
@@ -64,16 +64,16 @@ describe('MissionsService', () => {
       const res = await service.findOne('1');
       expect(res).toEqual({
         id: '1',
-        mission_type: 'Cleaning',
-        mission_status: 'Created',
+        missionType: 'Cleaning',
+        missionStatus: 'Created',
         jobs: [
           {
             id: '1',
-            mission_id: '1',
-            job_title: 'Exterior Clean',
-            job_status: 'Backlog',
+            missionId: '1',
+            jobTitle: 'Exterior Clean',
+            jobStatus: 'Backlog',
             tasks: [
-              {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}
+              {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
             ]
           }
         ]
@@ -85,15 +85,15 @@ describe('MissionsService', () => {
     it('Updates mission status', async () => {
       const mockMission = {
         id: '1',
-        mission_type: 'Cleaning',
-        mission_status: 'Created'
+        missionType: 'Cleaning',
+        missionStatus: 'Created'
       };
 
       mockDb.send
       .mockResolvedValueOnce({Item: mockMission})
       .mockResolvedValueOnce({});
 
-      const res = await service.updateStatus('1', {mission_status: 'In progress'});
+      const res = await service.updateStatus('1', {missionStatus: 'In progress'});
       expect(mockDb.send).toHaveBeenCalledTimes(2);
       expect(res).toEqual({...mockMission});
     })

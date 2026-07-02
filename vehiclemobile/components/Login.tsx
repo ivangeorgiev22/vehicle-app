@@ -22,9 +22,9 @@ export default function Login () {
         headers: {'Authorization': `Bearer ${token}`}
       });
       const data = await res.json();
-      if(!data.image_url) return;
+      if(!data.imageUrl) return;
 
-      const imgRes = await fetch(data.image_url);
+      const imgRes = await fetch(data.imageUrl);
       const blob = await imgRes.blob();
 
       const reader = new FileReader();

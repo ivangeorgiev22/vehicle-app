@@ -22,13 +22,13 @@ export class UsersController {
 
     @Post(':id/image')
     @UseInterceptors(FileInterceptor('image'))
-    async uploadImage(@Param('id') id: string, @UploadedFile() file: Express.Multer.File): Promise<{image_url:string}> {
+    async uploadImage(@Param('id') id: string, @UploadedFile() file: Express.Multer.File): Promise<{imageUrl:string}> {
       const img = await this.usersImageService.uploadImage(id,file);
       return img;
     }
 
     @Get(':id/image')
-    async getImage(@Param('id') id: string):Promise<{image_url: string | null}> {
+    async getImage(@Param('id') id: string):Promise<{imageUrl: string | null}> {
       const img = await this.usersImageService.getImage(id);
       return img;
     }

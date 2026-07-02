@@ -23,9 +23,9 @@ export class JobsService {
     await db.send(new UpdateCommand({
       TableName: this.dbService.getJobsTable(),
       Key: {id},
-      UpdateExpression: 'SET job_status = :job_status',
+      UpdateExpression: 'SET jobStatus = :jobStatus',
       ExpressionAttributeValues: {
-        ':job_status': req.job_status
+        ':jobStatus': req.jobStatus
       }
     }));
 
@@ -34,7 +34,7 @@ export class JobsService {
     }
   }
 
-  async updateTaskStatus(id: string, key: string, task_status: Task['task_status']): Promise<Job | null> {
+  async updateTaskStatus(id: string, key: string, taskStatus: Task['taskStatus']): Promise<Job | null> {
     const db = this.dbService.getDb();
     const job = await db.send(new GetCommand({
       TableName: this.dbService.getJobsTable(),
@@ -43,19 +43,15 @@ export class JobsService {
 
     if(!job) return null;
 
-    //parsing tasks
     const tasks: Task[] = typeof job.Item!.tasks === 'string'
     ? JSON.parse(job.Item!.tasks)
     : job.Item!.tasks;
 
-    //finding the task we need by key
     const task = tasks.find((t: Task) => t.key === key);
     if(!task) return null;
 
-    // updating task status
-    task.task_status = task_status
+    task.taskStatus = taskStatus
 
-    //stringify tasks and save
     await db.send(new UpdateCommand({
       TableName: this.dbService.getJobsTable(),
       Key: {id},
@@ -75,30 +71,32 @@ export class JobsService {
     const db = this.dbService.getDb();
     const jobs = await db.send(new ScanCommand({
       TableName: this.dbService.getJobsTable(),
-      FilterExpression: 'job_status = :job_status',
+      FilterExpression: 'jobStatus = :jobStatus',
       ExpressionAttributeValues: {
-        ':job_status': 'Backlog'
+        ':jobStatus': 'Backlog'
       }
     }));
 
     const jobsWithTasks = (jobs.Items || []).map(job => ({
       ...job,
       tasks: typeof job.tasks === 'string' ? JSON.parse(job.tasks) : job.tasks
-    })) as Job[];
+    })) as any[];
 
     const jobWithVehicle = await Promise.all(
       jobsWithTasks.map(async (job) => {
-        if (!job.vehicle_id) return job;
+        if (!job.vehicleId) return job;
         const vehicle = await db.send(new GetCommand({
           TableName: this.dbService.getVehiclesTable(),
-          Key: {vehicleId: job.vehicle_id}
+          Key: {id: job.vehicleId}
         }));
         return {
           ...job,
-          plate: vehicle.Item?.plate || null
+          vehicle: {
+            plate: vehicle.Item?.plate
+          }
         }
       })
-    )
+    ) as Job[];
     return jobWithVehicle;
   }
 

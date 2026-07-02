@@ -12,9 +12,12 @@ import { theme } from "../theme";
 
 interface Job {
   id: string;
-  job_title: string;
-  job_status: string;
-  plate?: string;
+  jobTitle: string;
+  jobTtatus: string;
+  vehicle: Vehicle;
+}
+interface Vehicle {
+  plate: string;
 }
 
 export default function Jobs() {
@@ -77,10 +80,8 @@ export default function Jobs() {
             <View style={styles.jobItem}>
               <View style={styles.label} />
               <View style={styles.jobInfo}>
-                <Text style={styles.jobTitle}>{item.job_title}</Text>
-                {item.plate && (
-                  <Text style={styles.vehicle}>Vehicle Reg: {item.plate}</Text>
-                )}
+                <Text style={styles.jobTitle}>{item.jobTitle}</Text>
+                <Text style={styles.vehicle}>Vehicle Reg: {item.vehicle.plate}</Text>
               </View>
               <Icon name="arrow-right" size={15} />
             </View>

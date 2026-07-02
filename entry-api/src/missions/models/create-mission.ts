@@ -1,4 +1,4 @@
 export interface CreateMissionRequest {
-  mission_type: 'Cleaning' | 'Fly Doctor' | 'Maintenance';
-  vehicle_id: string;
+  missionType: 'Cleaning' | 'Fly Doctor' | 'Maintenance';
+  vehicleId: string;
 }

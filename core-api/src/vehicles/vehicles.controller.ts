@@ -18,9 +18,9 @@ export class VehiclesController {
     return await this.vehiclesService.findAll();
   }
 
-  @Patch(':vehicleId/status')
-  async updateStatus(@Param('vehicleId') vehicleId:string, @Body() req: UpdateVehicleStatus): Promise<Vehicle> {
-    const vehicle = await this.vehiclesService.updateStatus(vehicleId, req);
+  @Patch(':id/status')
+  async updateStatus(@Param('id') id:string, @Body() req: UpdateVehicleStatus): Promise<Vehicle> {
+    const vehicle = await this.vehiclesService.updateStatus(id, req);
     if (!vehicle) throw new NotFoundException('Vehicle Not Found');
     return vehicle;
   }

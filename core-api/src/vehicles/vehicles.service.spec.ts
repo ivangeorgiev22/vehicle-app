@@ -39,16 +39,16 @@ describe('VehiclesService', () => {
       expect(mockDb.send).toHaveBeenCalledTimes(1);
       expect(res.plate).toBe('ABC-123');
       expect(res.battery).toBe(80);
-      expect(res.vehicle_status).toBe('Available');
-      expect(res.vehicleId).toBeDefined();
+      expect(res.vehicleStatus).toBe('Available');
+      expect(res.id).toBeDefined();
     })
   });
 
   describe('findAll()', () => {
     it('Returns all saved vehicles', async () => {
       const mockVehicles = [
-        {vehicleId: 'vehicle-1', plate: 'ABC-123', battery: 80, vehicle_status: 'Available'},
-        {vehicleId: 'vehicle-2', plate: 'ABC-223', battery: 70, vehicle_status: 'Available'}
+        {id: 'vehicle-1', plate: 'ABC-123', battery: 80, vehicleStatus: 'Available'},
+        {id: 'vehicle-2', plate: 'ABC-223', battery: 70, vehicleStatus: 'Available'}
       ];
       mockDb.send.mockResolvedValue({Items: mockVehicles});
       const res = await service.findAll();
@@ -62,20 +62,20 @@ describe('VehiclesService', () => {
   describe('updateStatus()', () => {
     it('Updates vehicle status', async () => {
       const mockVehicle = {
-        vehicleId: 'vehicle-1',
+        id: 'vehicle-1',
         plate: 'ABC-123',
         battery: 66,
-        vehicle_status: 'Available'
+        vehicleStatus: 'Available'
       };
 
       mockDb.send
       .mockResolvedValueOnce({Item: mockVehicle})
       .mockResolvedValueOnce({});
 
-      const res = await service.updateStatus('vehicle-1', {vehicle_status: 'Unavailable'});
+      const res = await service.updateStatus('vehicle-1', {vehicleStatus: 'Unavailable'});
 
       expect(mockDb.send).toHaveBeenCalledTimes(2);
-      expect(res?.vehicle_status).toBe('Unavailable');
+      expect(res?.vehicleStatus).toBe('Unavailable');
       expect(res?.plate).toBe('ABC-123');
     })
   })

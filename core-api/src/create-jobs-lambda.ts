@@ -1,40 +1,40 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { BatchWriteCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
-import { mission_templates } from "./jobs/job-templates";
+import { missionTemplates } from "./jobs/job-templates";
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient());
 
 export const handler = async (event: any) => {
-  const { id: mission_id, mission_type, vehicle_id } = event;
-  const jobs = mission_templates[mission_type];
-  const createdJobs: any[] = [];
+  const { id: missionId, missionType, vehicleId } = event;
+  const jobs = missionTemplates[missionType];
 
-  for (const job of jobs) {
-    const id = randomUUID();
-    await client.send(new PutCommand({
-      TableName: process.env.JOBS_TABLE,
-      Item: {
-        id,
-        mission_id,
-        vehicle_id,
-        job_title: job.job_title,
-        job_status: 'Backlog',
-        tasks: JSON.stringify(job.tasks)
-      }
-    }));
-    createdJobs.push({
-      id,
-      mission_id,
-      job_title: job.job_title,
-      job_status: 'Backlog',
-      tasks: job.tasks
-    });
-  }
+  const createdJobs = jobs.map(job => ({
+    id: randomUUID(),
+    missionId,
+    vehicleId,
+    jobTitle: job.jobTitle,
+    jobStatus: 'Backlog',
+    tasks: job.tasks
+  }));
+
+  await client.send(new BatchWriteCommand({
+    RequestItems: {
+      [process.env.JOBS_TABLE!]: createdJobs.map(job => ({
+        PutRequest: {
+          Item: {
+            ...job,
+            tasks: JSON.stringify(job.tasks)
+          }
+        }
+      }))
+    }
+  }));
+
   return {
-    mission_id,
-    mission_type,
-    vehicle_id,
+    missionId,
+    missionType,
+    vehicleId,
     jobsCount: createdJobs.length,
     tasksCount: createdJobs.reduce((sum, job) => sum + job.tasks.length, 0)
   };

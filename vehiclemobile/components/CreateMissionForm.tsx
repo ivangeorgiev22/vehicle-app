@@ -10,10 +10,10 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 type MissionType = 'Cleaning' | 'Fly Doctor' | 'Maintenance' | '';
 
 interface Vehicle {
-  vehicleId: string;
+  id: string;
   plate: string;
   battery: number;
-  vehicle_status: 'Available' | 'Unavailable'
+  vehicleStatus: 'Available' | 'Unavailable'
 }
 
 interface CreateMissionFormProps {
@@ -36,7 +36,7 @@ export default function CreateMissionForm({seen, onClose, vehicles, onMissionCre
   ]);
   const vehicleItems = vehicles.map(vehicle => ({
     label: `${vehicle.plate}`,
-    value: vehicle.vehicleId
+    value: vehicle.id
   }));
 
   const callApi = useFetch();
@@ -46,7 +46,7 @@ export default function CreateMissionForm({seen, onClose, vehicles, onMissionCre
       const res = await callApi(`${API_URL}/missions`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-        body: JSON.stringify({mission_type: missionType, vehicle_id: selectedVehicle})
+        body: JSON.stringify({missionType: missionType, vehicleId: selectedVehicle})
       });
       if (res.ok) {
         Alert.alert('Mission created!');

@@ -13,7 +13,7 @@ import { useFetch } from "../context/useFetch";
 interface Task {
   key: string;
   description: string;
-  task_status: 'Waiting' | 'Accepted' | 'Completed'
+  taskStatus: 'Waiting' | 'Accepted' | 'Completed'
 }
 
 export default function JobDetails() {
@@ -39,7 +39,7 @@ export default function JobDetails() {
     }
   };
 
-  const updateTaskStatus = async (key: string, task_status: 'Accepted' | 'Completed') => {
+  const updateTaskStatus = async (key: string, taskStatus: 'Accepted' | 'Completed') => {
     try {
       const res = await callApi(`${API_URL}/jobs/${id}/task/${key}/status`, {
         method: 'PATCH',
@@ -47,7 +47,7 @@ export default function JobDetails() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({task_status})
+        body: JSON.stringify({taskStatus})
       })
 
       if (res.ok) {
@@ -89,16 +89,16 @@ export default function JobDetails() {
             <View style={styles.label} />
             <View style={styles.taskInfo}>
               <Text style={styles.taskDesc}>{item.description}</Text>
-              <Text style={styles.taskStatus}>Status: {item.task_status}</Text>
+              <Text style={styles.taskStatus}>Status: {item.taskStatus}</Text>
             </View>
 
-            {item.task_status === 'Waiting' && (
+            {item.taskStatus === 'Waiting' && (
               <Pressable onPress={() => updateTaskStatus(item.key, 'Accepted')} style={styles.acceptButton}>
                 <Text style={styles.buttonTxt}>Accept</Text>
               </Pressable>
             )}
 
-            {item.task_status === 'Accepted' && (
+            {item.taskStatus === 'Accepted' && (
               <Pressable onPress={() => updateTaskStatus(item.key, 'Completed')} style={styles.completeButton}>
                 <Text style={styles.buttonTxt}>Complete</Text>
               </Pressable>

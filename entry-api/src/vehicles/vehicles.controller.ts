@@ -24,11 +24,11 @@ export class VehiclesController {
     return await this.vehiclesService.getAll();
   }
 
-  @Patch(':vehicleId/status')
+  @Patch(':id/status')
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
-  async updateStatus(@Param('vehicleId') vehicleId: string, @Body() req: UpdateVehicleStatus): Promise<Vehicle> {
-    const vehicle = await this.vehiclesService.updateStatus(vehicleId, req);
+  async updateStatus(@Param('vehicleId') id: string, @Body() req: UpdateVehicleStatus): Promise<Vehicle> {
+    const vehicle = await this.vehiclesService.updateStatus(id, req);
     if (!vehicle) throw new NotFoundException('Vehicle Not Found');
     return vehicle;
   }

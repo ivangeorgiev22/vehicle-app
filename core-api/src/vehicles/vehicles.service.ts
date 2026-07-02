@@ -12,12 +12,12 @@ export class VehiclesService {
 
   async create(req: CreateVehicleRequest): Promise<Vehicle> {
     const db = this.dbService.getDb();
-    const vehicleId = randomUUID();
+    const id = randomUUID();
     const vehicle: Vehicle = {
-      vehicleId,
+      id,
       plate: req.plate,
       battery: req.battery,
-      vehicle_status: 'Available'
+      vehicleStatus: 'Available'
     };
 
     await db.send(new PutCommand({
@@ -37,22 +37,22 @@ export class VehiclesService {
     return (res.Items || []) as Vehicle[];
   }
 
-  async updateStatus(vehicleId: string, req: UpdateVehicleStatus): Promise<Vehicle | null> {
+  async updateStatus(id: string, req: UpdateVehicleStatus): Promise<Vehicle | null> {
     const db = this.dbService.getDb();
     const vehicle = await db.send(new GetCommand({
       TableName: this.dbService.getVehiclesTable(),
-      Key: {vehicleId}
+      Key: {id}
     }));
 
     if (!vehicle.Item) return null;
 
     await db.send(new UpdateCommand({
       TableName: this.dbService.getVehiclesTable(),
-      Key: {vehicleId},
-      UpdateExpression: 'SET vehicle_status = :vehicle_status',
-      ExpressionAttributeValues: {':vehicle_status': req.vehicle_status}
+      Key: {id},
+      UpdateExpression: 'SET vehicleStatus = :vehicleStatus',
+      ExpressionAttributeValues: {':vehicleStatus': req.vehicleStatus}
     }));
 
-    return {...vehicle.Item as Vehicle, vehicle_status: req.vehicle_status}
+    return {...vehicle.Item as Vehicle, vehicleStatus: req.vehicleStatus}
   }
 }

@@ -44,7 +44,7 @@ describe('MissionsService', () => {
 
   describe('create()', () => {
     it('Triggers Step Function execution', async () => {
-      await service.create({mission_type: 'Cleaning', vehicle_id: 'vehicle-1'});
+      await service.create({missionType: 'Cleaning', vehicleId: 'vehicle-1'});
 
       expect(mockSfn).toHaveBeenCalledTimes(1);
       expect(mockJobsGateway.broadcastJobs).toHaveBeenCalledTimes(1);
@@ -87,7 +87,7 @@ describe('MissionsService', () => {
       };
       mockApiClient.updateMissionStatus.mockResolvedValue(mockMission);
 
-      const res = await service.updateStatus('1', {mission_status: 'In Progress'});
+      const res = await service.updateStatus('1', {missionStatus: 'In Progress'});
 
       expect(mockApiClient.updateMissionStatus).toHaveBeenCalledWith('1', 'In Progress');
       expect(res).toEqual(mockMission);

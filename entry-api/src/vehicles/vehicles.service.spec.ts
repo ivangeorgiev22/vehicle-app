@@ -31,10 +31,10 @@ describe('VehiclesService', () => {
   describe('create()', () => {
     it('Calls API with plate and battery and returns created vehicle', async () => {
       const mockVehicle = {
-        vehicleId: 'vehicle-1',
+        id: 'vehicle-1',
         plate: 'ABC-123',
         battery: 80,
-        vehicle_status: 'Available'
+        vehicleStatus: 'Available'
       }
       mockApiClient.createVehicle.mockResolvedValue(mockVehicle);
       const res = await service.create({plate: 'ABC-123', battery: 80});
@@ -47,8 +47,8 @@ describe('VehiclesService', () => {
   describe('getAll()', () => {
     it('Returns all vehicles', async () => {
       const mockVehicles = [
-        {vehicleId: 'vehicle-id', plate: 'ABC-123', battery: 100, vehicle_status: 'Available'},
-        {vehicleId: 'vehicle-id', plate: 'ABC-123', battery: 100, vehicle_status: 'Available'}
+        {id: 'vehicle-id', plate: 'ABC-123', battery: 100, vehicleStatus: 'Available'},
+        {id: 'vehicle-id', plate: 'ABC-123', battery: 100, vehicleStatus: 'Available'}
       ];
       mockApiClient.getVehicles.mockResolvedValue(mockVehicles);
 
@@ -62,17 +62,17 @@ describe('VehiclesService', () => {
   describe('updateStatus()', () => {
     it('Calls API with vehicleId and status', async () => {
       const mockVehicle = {
-        vehicleId: 'vehicle-1',
+        id: 'vehicle-1',
         plate: 'ABC-123',
         battery: 80,
-        vehicle_status: 'Unavailable'
+        vehicleStatus: 'Unavailable'
       };
       mockApiClient.updateVehicleStatus.mockResolvedValue(mockVehicle);
 
-      const res = await service.updateStatus('vehicle-1', {vehicle_status: 'Unavailable'});
+      const res = await service.updateStatus('vehicle-1', {vehicleStatus: 'Unavailable'});
 
       expect(mockApiClient.updateVehicleStatus).toHaveBeenCalledWith('vehicle-1', 'Unavailable');
-      expect(res.vehicle_status).toBe('Unavailable');
+      expect(res.vehicleStatus).toBe('Unavailable');
     });
   });
 });

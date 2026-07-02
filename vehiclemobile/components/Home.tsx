@@ -13,10 +13,10 @@ import AddVehicleForm from "./AddVehicleForm";
 import CreateMissionForm from "./CreateMissionForm";
 
 interface Vehicle {
-  vehicleId: string;
+  id: string;
   plate: string;
   battery: number;
-  vehicle_status: 'Available' | 'Unavailable'
+  vehicleStatus: 'Available' | 'Unavailable'
 }
 
 export default function Home () {
@@ -60,7 +60,7 @@ export default function Home () {
       <FlatList
         data={vehicles}
         style={styles.vehicleList}
-        keyExtractor={(vehicle => vehicle.vehicleId)}
+        keyExtractor={(vehicle => vehicle.id)}
         ListEmptyComponent={
           <Text style={styles.placeholder}>No vehicles added.</Text>
         }
@@ -75,7 +75,7 @@ export default function Home () {
               <Text>{item.battery}%</Text>
             </View>
             <View>
-              <Text style={{color: item.vehicle_status === 'Available' ? '#0bc924' : '#d21b1b'}}>{item.vehicle_status}</Text>
+              <Text style={{color: item.vehicleStatus === 'Available' ? '#0bc924' : '#d21b1b'}}>{item.vehicleStatus}</Text>
             </View>
           </View>
         )}

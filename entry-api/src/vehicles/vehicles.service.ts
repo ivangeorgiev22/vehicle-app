@@ -17,7 +17,7 @@ export class VehiclesService {
     return this.coreApi.getVehicles();
   }
 
-  updateStatus(vehicleId: string, req: UpdateVehicleStatus): Promise<Vehicle> {
-    return this.coreApi.updateVehicleStatus(vehicleId, req.vehicle_status);
+  updateStatus(id: string, req: UpdateVehicleStatus): Promise<Vehicle> {
+    return this.coreApi.updateVehicleStatus(id, req.vehicleStatus);
   }
 }

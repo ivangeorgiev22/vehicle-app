@@ -14,7 +14,7 @@ export class MissionsService {
   async create(req: CreateMissionRequest): Promise<void> {
     await this.sfnClient.send(new StartExecutionCommand({
       stateMachineArn: process.env.STATE_MACHINE_ARN,
-      input: JSON.stringify({mission_type: req.mission_type, vehicle_id: req.vehicle_id})
+      input: JSON.stringify({missionType: req.missionType, vehicleId: req.vehicleId})
     }));
     await this.jobsGateway.broadcastJobs();
   }
@@ -24,6 +24,6 @@ export class MissionsService {
   }
 
   updateStatus(id: string, req: UpdateMission): Promise<Mission | null> {
-    return this.coreApi.updateMissionStatus(id, req.mission_status);
+    return this.coreApi.updateMissionStatus(id, req.missionStatus);
   }
 }

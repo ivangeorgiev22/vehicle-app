@@ -8,9 +8,9 @@ export const handler = async (event: any) => {
   const id = randomUUID();
   const mission = {
     id,
-    mission_type: event.mission_type,
-    mission_status: 'Created',
-    vehicle_id: event.vehicle_id
+    missionType: event.missionType,
+    missionStatus: 'Created',
+    vehicleId: event.vehicleId
   };
 
   await client.send(new PutCommand({

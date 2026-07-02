@@ -1,6 +1,6 @@
 export interface Vehicle {
-  vehicleId: string;
+  id: string;
   plate: string;
   battery: number;
-  vehicle_status: 'Available' | 'Unavailable'
+  vehicleStatus: 'Available' | 'Unavailable'
 }

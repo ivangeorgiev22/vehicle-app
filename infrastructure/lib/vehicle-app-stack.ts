@@ -51,7 +51,7 @@ export class VehicleAppStack extends Stack {
     });
     jobsTable.addGlobalSecondaryIndex({
       indexName: 'mission-id-index',
-      partitionKey: { name: 'mission_id', type: dynamodb.AttributeType.STRING }
+      partitionKey: { name: 'missionId', type: dynamodb.AttributeType.STRING }
     });
 
     const connectionsTable = new dynamodb.Table(this, 'ConnectionsTable', {
@@ -63,7 +63,7 @@ export class VehicleAppStack extends Stack {
 
     const vehiclesTable = new dynamodb.Table(this, 'VehiclesTable', {
       tableName: `vehicles-${env}`,
-      partitionKey: {name: 'vehicleId', type: dynamodb.AttributeType.STRING},
+      partitionKey: {name: 'id', type: dynamodb.AttributeType.STRING},
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY
     });
@@ -295,7 +295,7 @@ export class VehicleAppStack extends Stack {
         Content: {
           Simple: {
             Subject: {
-              'Data.$': "States.Format('New Mission: {}', $.mission_type)"
+              'Data.$': "States.Format('New Mission: {}', $.missionType)"
             },
             Body: {
               Html: {

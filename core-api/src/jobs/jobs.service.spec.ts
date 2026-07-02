@@ -36,17 +36,17 @@ describe.only('JobsService', () => {
     it('Should update job status', async () => {
       const mockJob = {
         id: '1',
-        mission_id: '1',
-        vehicle_id: 'vehicle-1',
-        job_title: 'Exterior Clean',
-        job_status: 'Backlog',
+        missionId: '1',
+        vehicleId: 'vehicle-1',
+        jobTitle: 'Exterior Clean',
+        jobStatus: 'Backlog',
         tasks: '[]'
       };
       mockDb.send
       .mockResolvedValueOnce({Item: mockJob}) //get command
       .mockResolvedValueOnce({}) // update command
 
-      const res = await service.updateJobStatus('1', {job_status: 'Accepted'});
+      const res = await service.updateJobStatus('1', {jobStatus: 'Accepted'});
       expect(res).toEqual({...mockJob});
     });
   });
@@ -55,11 +55,11 @@ describe.only('JobsService', () => {
     it('Updates task status and returns job with parsed tasks', async () => {
       const mockJob = {
         id: '1',
-        mission_id: '1',
-        job_title: 'Exterior Clean',
-        job_status: 'Backlog',
+        missionId: '1',
+        jobTitle: 'Exterior Clean',
+        jobStatus: 'Backlog',
         tasks: JSON.stringify([
-          {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}
+          {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
         ])
       };
 
@@ -70,11 +70,11 @@ describe.only('JobsService', () => {
       const res = await service.updateTaskStatus('1', 'clean-1', 'Accepted');
       expect(res).toEqual({
         id: '1',
-        mission_id: '1',
-        job_title: 'Exterior Clean',
-        job_status: 'Backlog',
+        missionId: '1',
+        jobTitle: 'Exterior Clean',
+        jobStatus: 'Backlog',
         tasks: [
-          {key: 'clean-1', description: 'Wash vehicle', task_status: 'Accepted'}
+          {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Accepted'}
         ]
       });
     });
@@ -84,19 +84,19 @@ describe.only('JobsService', () => {
       const mockJobs = [
         {
           id: '1',
-          mission_id: '1',
-          vehicle_id: 'vehicle-1',
-          job_title: 'Exterior Clean',
-          job_status: 'Backlog',
-          tasks: JSON.stringify([{key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}])
+          missionId: '1',
+          vehicleId: 'vehicle-1',
+          jobTitle: 'Exterior Clean',
+          jobStatus: 'Backlog',
+          tasks: JSON.stringify([{key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}])
         },
         {
           id: '2',
-          mission_id: '1',
-          vehicle_id: 'vehicle-2',
-          job_title: 'Interior Clean',
-          job_status: 'Backlog',
-          tasks: JSON.stringify([{key: 'clean-2', description: 'Clean interior', task_status: 'Waiting'}])
+          missionId: '1',
+          vehicleId: 'vehicle-2',
+          jobTitle: 'Interior Clean',
+          jobStatus: 'Backlog',
+          tasks: JSON.stringify([{key: 'clean-2', description: 'Clean interior', taskStatus: 'Waiting'}])
         }
       ];
       mockDb.send.mockResolvedValueOnce({Items: mockJobs});
@@ -104,8 +104,8 @@ describe.only('JobsService', () => {
       mockDb.send.mockResolvedValueOnce({Item: {vehicleId: 'vehicle-1', plate: 'ABC-123'}});
       const res = await service.backlogJobs();
       expect(res).toHaveLength(2);
-      expect(res[0].plate).toBe('ABC-123');
-      expect(res[1].plate).toBe('ABC-123');
+      expect(res[0].vehicle.plate).toBe('ABC-123');
+      expect(res[1].vehicle.plate).toBe('ABC-123');
     });
   });
 
@@ -114,22 +114,22 @@ describe.only('JobsService', () => {
       mockDb.send.mockResolvedValue({
         Item: {
           id: '1',
-          mission_id: '1',
-          job_title: 'Exterior clean',
-          job_status: 'Backlog',
+          missionId: '1',
+          jobTitle: 'Exterior clean',
+          jobStatus: 'Backlog',
           tasks: JSON.stringify([
-            {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}
+            {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
           ])
         }
       });
       const res = await service.getJobById('1');
       expect(res).toEqual({
         id: '1',
-        mission_id: '1',
-        job_title: 'Exterior clean',
-        job_status: 'Backlog',
+        missionId: '1',
+        jobTitle: 'Exterior clean',
+        jobStatus: 'Backlog',
         tasks: [
-          {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}
+          {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
         ]
       });
     });

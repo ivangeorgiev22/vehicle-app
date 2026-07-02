@@ -7,8 +7,8 @@ export const handler = async (event: any) => {
   
   await client.send(new UpdateCommand({
     TableName: process.env.VEHICLES_TABLE,
-    Key: {vehicleId: event.vehicle_id},
-    UpdateExpression: 'SET vehicle_status = :status',
+    Key: {id: event.vehicleId},
+    UpdateExpression: 'SET vehicleStatus = :status',
     ExpressionAttributeValues: {':status': 'Unavailable'}
   }));
 
