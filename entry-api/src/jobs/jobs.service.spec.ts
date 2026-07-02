@@ -32,13 +32,13 @@ describe('JobsService', () => {
     it('Calls API with id and job status', async () => {
       const mockJob = {
         id: '1',
-        mission_id: '1',
-        job_title: 'Exterior Clean',
-        job_status: 'Backlog',
+        missionId: '1',
+        jobTitle: 'Exterior Clean',
+        jobStatus: 'Backlog',
         tasks: []
       };
       mockApiClient.updateJobStatus.mockResolvedValue(mockJob);
-      await service.updateStatus('1', {job_status: 'Accepted'});
+      await service.updateStatus('1', {jobStatus: 'Accepted'});
 
       expect(mockApiClient.updateJobStatus).toHaveBeenCalledWith('1', 'Accepted');
     });
@@ -48,15 +48,15 @@ describe('JobsService', () => {
     it('Calls API with id, key and task status', async () => {
       const mockJob = {
         id: '1',
-        mission_id: '1',
-        job_title: 'Exterior Clean',
-        job_status: 'Backlog',
+        missionId: '1',
+        jobTitle: 'Exterior Clean',
+        jobStatus: 'Backlog',
         tasks: [
-          {key: 'clean-1', description: 'Wash Vehicle', task_status: 'Waiting'}
+          {key: 'clean-1', description: 'Wash Vehicle', taskStatus: 'Waiting'}
         ]
       };
       mockApiClient.updateTaskStatus.mockResolvedValue(mockJob);
-      await service.updateTaskStatus('1', 'clean-1', {task_status: 'Accepted'});
+      await service.updateTaskStatus('1', 'clean-1', {taskStatus: 'Accepted'});
 
       expect(mockApiClient.updateTaskStatus).toHaveBeenCalledWith('1', 'clean-1', 'Accepted');
     });
@@ -67,10 +67,10 @@ describe('JobsService', () => {
       const mockJob = [
         {
           id: '1',
-          mission_id: '1',
-          job_title: 'Exterior Clean',
-          job_status: 'Backlog',
-          tasks: [{key: 'clean-1', description: 'Exterior clean', task_status: 'Waiting'}]
+          missionId: '1',
+          jobTitle: 'Exterior Clean',
+          jobStatus: 'Backlog',
+          tasks: [{key: 'clean-1', description: 'Exterior clean', taskStatus: 'Waiting'}]
         }
       ];
       mockApiClient.getBacklogJobs.mockResolvedValue([]);
@@ -94,11 +94,11 @@ describe('JobsService', () => {
     it('Returns job on success', async () => {
       const mockJob = {
         id: '1',
-        mission_id: '1',
-        job_title: 'Exterior Clean',
-        job_status: 'Backlog',
+        missionId: '1',
+        jobTitle: 'Exterior Clean',
+        jobStatus: 'Backlog',
         tasks: [
-          {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waitign'}
+          {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waitign'}
         ]
       };
       mockApiClient.getJobById.mockResolvedValue(mockJob);

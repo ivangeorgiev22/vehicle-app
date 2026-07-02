@@ -6,7 +6,8 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "deploy": "npx @dotenvx/dotenvx run -- node scripts/deploy.js"
+    "deploy": "npx @dotenvx/dotenvx run -- node scripts/deploy.js",
+    "hash-password": "node scripts/hash-password.js"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

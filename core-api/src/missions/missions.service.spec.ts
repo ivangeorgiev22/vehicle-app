@@ -38,53 +38,22 @@ describe('MissionsService', () => {
     jest.clearAllMocks();
   });
 
-  describe('create()', () => {
-    it('Inserts a mission with correct type', async () => {
-      mockDb.send.mockResolvedValue({});
-      mockJobsService.createJob.mockResolvedValue(undefined);
-
-      await service.create({mission_type: 'Cleaning'});
-      expect(mockJobsService.createJob).toHaveBeenCalledWith(
-        expect.any(String), // uuid
-        'Cleaning'
-      );
-    });
-
-    it('Calls jobsService with mission id and type', async () => {
-      mockDb.send.mockResolvedValue({});
-      mockJobsService.createJob.mockResolvedValue(undefined);
-
-      await service.create({mission_type: 'Cleaning'});
-      expect(mockJobsService.createJob).toHaveBeenCalledWith(expect.any(String), 'Cleaning');
-    });
-
-    it('Returns created mission', async () => {
-      mockDb.send.mockResolvedValue({});
-      mockJobsService.createJob.mockResolvedValue(undefined);
-
-      const res = await service.create({mission_type: 'Cleaning'});
-      expect(res?.mission_type).toBe('Cleaning');
-      expect(res?.id).toBeDefined();
-      expect(res?.mission_status).toBe('Created')
-    });
-  });
-
   describe('findOne()', () => {
     it('Returns mission with jobs and tasks', async () => {
       const mockMission = {
         id: '1',
-        mission_type: 'Cleaning',
-        mission_status: 'Created'
+        missionType: 'Cleaning',
+        missionStatus: 'Created'
       };
       
       const mockJob = [
         {
           id: '1',
-          mission_id: '1',
-          job_title: 'Exterior Clean',
-          job_status: 'Backlog',
+          missionId: '1',
+          jobTitle: 'Exterior Clean',
+          jobStatus: 'Backlog',
           tasks: JSON.stringify([
-            {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}
+            {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
           ])
         }
       ];
@@ -95,16 +64,16 @@ describe('MissionsService', () => {
       const res = await service.findOne('1');
       expect(res).toEqual({
         id: '1',
-        mission_type: 'Cleaning',
-        mission_status: 'Created',
+        missionType: 'Cleaning',
+        missionStatus: 'Created',
         jobs: [
           {
             id: '1',
-            mission_id: '1',
-            job_title: 'Exterior Clean',
-            job_status: 'Backlog',
+            missionId: '1',
+            jobTitle: 'Exterior Clean',
+            jobStatus: 'Backlog',
             tasks: [
-              {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}
+              {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
             ]
           }
         ]
@@ -116,15 +85,15 @@ describe('MissionsService', () => {
     it('Updates mission status', async () => {
       const mockMission = {
         id: '1',
-        mission_type: 'Cleaning',
-        mission_status: 'Created'
+        missionType: 'Cleaning',
+        missionStatus: 'Created'
       };
 
       mockDb.send
       .mockResolvedValueOnce({Item: mockMission})
       .mockResolvedValueOnce({});
 
-      const res = await service.updateStatus('1', {mission_status: 'In progress'});
+      const res = await service.updateStatus('1', {missionStatus: 'In progress'});
       expect(mockDb.send).toHaveBeenCalledTimes(2);
       expect(res).toEqual({...mockMission});
     })

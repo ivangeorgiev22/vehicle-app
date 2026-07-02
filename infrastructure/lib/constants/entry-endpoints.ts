@@ -69,5 +69,22 @@ export const entryApiEndpoints: ApiEndpoint[] = [
                 ]
             }
         ]
+    },
+    {
+        endpointUrl: 'vehicles',
+        httpMethods: ['GET', 'POST'],
+        subEndpoints: [
+            {
+                endpointUrl: '{id}',
+                httpMethods: ['GET'],
+                subEndpoints: [
+                    {
+                        endpointUrl: 'status',
+                        httpMethods: ['PATCH']
+                    }
+                ]
+            }
+        ]
     }
+    
 ];

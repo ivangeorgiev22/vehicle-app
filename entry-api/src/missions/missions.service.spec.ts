@@ -2,9 +2,12 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { ApiClient } from "../core-client/api-client";
 import { MissionsService } from "./missions.service";
 import { JobsGateway } from "../jobs/jobs.gateway";
+import { SFNClient } from "@aws-sdk/client-sfn";
 
 describe('MissionsService', () => {
   let service: MissionsService;
+
+  const mockSfn = jest.fn().mockResolvedValue({});
 
   const mockApiClient = {
     createMission: jest.fn(),
@@ -17,6 +20,8 @@ describe('MissionsService', () => {
   }
 
   beforeEach(async () => {
+    jest.spyOn(SFNClient.prototype, 'send').mockImplementation(mockSfn);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MissionsService,
@@ -38,18 +43,12 @@ describe('MissionsService', () => {
   });
 
   describe('create()', () => {
-    it('Calls API with mission type', async () => {
-      const mockMission = {
-        id: '1',
-        mission_type: 'Cleaning',
-        mission_status: 'Created'
-      };
-      mockApiClient.createMission.mockResolvedValue(mockMission);
-      const res = await service.create({mission_type: 'Cleaning'});
+    it('Triggers Step Function execution', async () => {
+      await service.create({missionType: 'Cleaning', vehicleId: 'vehicle-1'});
 
-      expect(mockApiClient.createMission).toHaveBeenCalledWith('Cleaning');
-      expect(res).toEqual(mockMission);
-    });
+      expect(mockSfn).toHaveBeenCalledTimes(1);
+      expect(mockJobsGateway.broadcastJobs).toHaveBeenCalledTimes(1);
+    })
   });
 
   describe('findOne()', () => {
@@ -88,7 +87,7 @@ describe('MissionsService', () => {
       };
       mockApiClient.updateMissionStatus.mockResolvedValue(mockMission);
 
-      const res = await service.updateStatus('1', {mission_status: 'In Progress'});
+      const res = await service.updateStatus('1', {missionStatus: 'In Progress'});
 
       expect(mockApiClient.updateMissionStatus).toHaveBeenCalledWith('1', 'In Progress');
       expect(res).toEqual(mockMission);

@@ -1,48 +1,47 @@
-import { View, Text, StyleSheet, Alert, TouchableOpacity, Image, Pressable } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, Pressable, FlatList } from "react-native";
 import { useAuth } from "../context/authContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { API_URL } from "@env";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { Params } from "../navigation/types";
 import { SafeAreaView } from "react-native-safe-area-context";
-import DropDownPicker from "react-native-dropdown-picker";
 import User from 'react-native-vector-icons/Feather';
 import { theme } from "../theme";
 import { useFetch } from "../context/useFetch";
+import AddVehicleForm from "./AddVehicleForm";
+import CreateMissionForm from "./CreateMissionForm";
 
-type MissionType = 'Cleaning' | 'Fly Doctor' | 'Maintenance' | '';
+interface Vehicle {
+  id: string;
+  plate: string;
+  battery: number;
+  vehicleStatus: 'Available' | 'Unavailable'
+}
 
 export default function Home () {
-  const { token, isAdmin, userId, image } = useAuth();
-  const [missionType, setMissionType] = useState<MissionType>('');
+  const { token, userId, image } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
-  const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([
-    {label: 'Cleaning', value: 'Cleaning'},
-    {label: 'Fly Doctor', value: 'Fly Doctor'},
-    {label: 'Maintenance', value: 'Maintenance'}
-  ]);
   const callApi = useFetch();
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [addVehicleForm, setAddVehicleForm] = useState(false);
+  const [createMissionForm, setCreateMissionForm] = useState(false);
 
-  const createMission = async () => {
+  const fetchVehicles = async () => {
     try {
-      const res = await callApi(`${API_URL}/missions`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-        body: JSON.stringify({mission_type: missionType})
-      })
-
-      if(res.ok) {
-        Alert.alert('Mission created!')
-        setMissionType('')
-      } else {
-        Alert.alert(`Error: ${res.status}`)
-      }
+      const res = await callApi(`${API_URL}/vehicles`, {
+        headers: {'Authorization': `Bearer ${token}`}
+      });
+      const data = await res.json();
+      setVehicles(data);
     } catch (error) {
-      console.log('Error', error);
+      console.log('Error retrieving vehicles', error);
     }
   };
+
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -58,30 +57,50 @@ export default function Home () {
           </View>
         </Pressable>
       </View>
-      {isAdmin && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>New Mission</Text>
-          <Text style={styles.cardSubtitle}>Select a mission type</Text>
-          <DropDownPicker
-            open={open}
-            value={missionType}
-            items={items}
-            setOpen={setOpen}
-            setValue={setMissionType}
-            setItems={setItems}
-            style={styles.picker}
-            textStyle={styles.pickerText}
-            dropDownContainerStyle={styles.pickerDropdown}
-            listItemLabelStyle={styles.pickerText}
-          />
-          <TouchableOpacity
-            style={styles.button}
-            onPress={createMission}
-          >
-            <Text style={styles.buttonText}>Create Mission</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <FlatList
+        data={vehicles}
+        style={styles.vehicleList}
+        keyExtractor={(vehicle => vehicle.id)}
+        ListEmptyComponent={
+          <Text style={styles.placeholder}>No vehicles added.</Text>
+        }
+        renderItem={({item}) => (
+          <View style={styles.vehicleCard}>
+            <View style={styles.vehicleInfo}>
+              <Text style={styles.vehicleInfoTitle}>Reg:</Text>
+              <Text>{item.plate}</Text>
+            </View>
+            <View style={styles.vehicleInfo}>
+              <Text style={styles.vehicleInfoTitle}>Battery:</Text>
+              <Text>{item.battery}%</Text>
+            </View>
+            <View>
+              <Text style={{color: item.vehicleStatus === 'Available' ? '#0bc924' : '#d21b1b'}}>{item.vehicleStatus}</Text>
+            </View>
+          </View>
+        )}
+        ListFooterComponent={
+          <View style={styles.forms}>
+            <TouchableOpacity onPress={() => setAddVehicleForm(true)} style={styles.button}>
+              <Text style={styles.buttonText}>Add Vehicle</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setCreateMissionForm(true)} style={styles.secondaryBtn}>
+              <Text style={styles.secondaryBtnText}>Create Mission</Text>
+            </TouchableOpacity>
+          </View>
+        } 
+      />
+      <AddVehicleForm
+        seen={addVehicleForm}
+        onClose={() => setAddVehicleForm(false)}
+        onVehicleAdded={fetchVehicles} 
+      />
+      <CreateMissionForm
+        seen={createMissionForm}
+        onClose={() => setCreateMissionForm(false)}
+        vehicles={vehicles}
+        onMissionCreated={() => {setCreateMissionForm(false); setTimeout(() => fetchVehicles(), 2500)}} 
+      />
     </SafeAreaView>
   );
 }
@@ -98,17 +117,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 200,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: theme.colors.text
-  },
-  headerTxt: {
-    color: theme.colors.text,
-    fontSize: 15,
-    fontWeight: '700'
   },
   avatar: {
     width: theme.avatar.size,
@@ -123,47 +136,58 @@ const styles = StyleSheet.create({
     height: theme.avatar.size,
     borderRadius: theme.borderRadius.avatar,
   },
-  card: {
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.card,
-    padding: theme.spacing.cardPadding,
-    margin: theme.spacing.cardMargin,
-    elevation: theme.elevation.card,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 4,
-  },
-  cardSubtitle: {
-    fontSize: theme.fontSize.subtitle,
-    color: '#888',
-    marginBottom: 20,
-  },
-  picker: {
-    borderColor: theme.colors.border,
-    borderRadius: 10,
-    backgroundColor: '#f9f9f9',
-    marginBottom: 16,
-  },
-  pickerText: {
-    fontSize: theme.fontSize.body,
-  },
-  pickerDropdown: {
-    borderColor: theme.colors.border,
-    backgroundColor: '#f9f9f9',
-  },
   button: {
     backgroundColor: theme.colors.button,
-    paddingVertical: 14,
+    padding: 20,
     borderRadius: theme.borderRadius.button,
     alignItems: 'center',
-    marginTop: 8,
   },
   buttonText: {
     color: theme.colors.text,
     fontSize: theme.fontSize.body,
     fontWeight: '700',
   },
+  placeholder: {
+    fontSize: 16,
+    marginBottom: 16,
+    alignSelf: 'center'
+  },
+  vehicleCard: {
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.borderRadius.card,
+    padding: 16,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: theme.elevation.card
+  },
+  forms: {
+    marginTop: 8,
+    gap: 35,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  secondaryBtn: {
+    backgroundColor: theme.colors.button,
+    padding: 20,
+    borderRadius: theme.borderRadius.button,
+    alignItems: 'center'
+  },
+  secondaryBtnText: {
+    color: theme.colors.text,
+    fontSize: theme.fontSize.body,
+    fontWeight: '700',
+  },
+  vehicleList: {
+    paddingVertical: theme.spacing.vertical,
+    paddingHorizontal: 19
+  },
+  vehicleInfo: {
+    alignItems: 'center'
+  },
+  vehicleInfoTitle: {
+    fontWeight: '600'
+  }
 });

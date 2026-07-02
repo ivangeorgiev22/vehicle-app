@@ -22,9 +22,9 @@ export class MissionsService {
     const jobsRes = await db.send(new QueryCommand({
       TableName: this.dbService.getJobsTable(),
       IndexName: 'mission-id-index',
-      KeyConditionExpression: 'mission_id = :mission_id',
+      KeyConditionExpression: 'missionId = :missionId',
       ExpressionAttributeValues: {
-        ':mission_id': id
+        ':missionId': id
       }
     }));
 
@@ -52,9 +52,9 @@ export class MissionsService {
     await db.send(new UpdateCommand({
       TableName: this.dbService.getMissionsTable(),
       Key: {id},
-      UpdateExpression: 'SET mission_status = :mission_status',
+      UpdateExpression: 'SET missionStatus = :missionStatus',
       ExpressionAttributeValues: {
-        ':mission_status': req.mission_status
+        ':missionStatus': req.missionStatus
       }
     }));
     return {

@@ -15,7 +15,7 @@ import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { emailTemplate } from '../templates/email-template';
 import * as cr from 'aws-cdk-lib/custom-resources';
-import * as bcrypt from 'bcrypt';
+import { users } from './seed/users';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -51,12 +51,19 @@ export class VehicleAppStack extends Stack {
     });
     jobsTable.addGlobalSecondaryIndex({
       indexName: 'mission-id-index',
-      partitionKey: { name: 'mission_id', type: dynamodb.AttributeType.STRING }
+      partitionKey: { name: 'missionId', type: dynamodb.AttributeType.STRING }
     });
 
     const connectionsTable = new dynamodb.Table(this, 'ConnectionsTable', {
       tableName: `connections-${env}`,
       partitionKey: {name: 'connectionId', type: dynamodb.AttributeType.STRING},
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
+    const vehiclesTable = new dynamodb.Table(this, 'VehiclesTable', {
+      tableName: `vehicles-${env}`,
+      partitionKey: {name: 'id', type: dynamodb.AttributeType.STRING},
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY
     });
@@ -67,53 +74,21 @@ export class VehicleAppStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY
     });
 
-    const password = bcrypt.hashSync('123456', 10);
-
-    new cr.AwsCustomResource(this, 'SeedAdmin', {
+    new cr.AwsCustomResource(this, 'SeedUsers', {
       onCreate: {
         service: 'DynamoDB',
-        action: 'putItem',
+        action: 'batchWriteItem',
         parameters: {
-          TableName: usersTable.tableName,
-          Item: {
-            id: {S: 'admin-001'},
-            username: {S: 'admin'},
-            password: {S: password},
-            firstName: {S: 'admin'},
-            lastName: {S: 'admin'},
-            email: {S: 'admin@test.com'},
-            role: {S: 'ADMIN'}
+          RequestItems: {
+            [usersTable.tableName]: users
           }
         },
-        physicalResourceId: cr.PhysicalResourceId.of('seed-admin')
+        physicalResourceId: cr.PhysicalResourceId.of('seed-users')
       },
       policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
         resources: [usersTable.tableArn]
       })
-    });
-
-    new cr.AwsCustomResource(this, 'SeedOperator', {
-      onCreate: {
-        service: 'DynamoDB',
-        action: 'putItem',
-        parameters: {
-          TableName: usersTable.tableName,
-          Item: {
-            id: {S: 'operator-001'},
-            username: {S: 'operator'},
-            password: {S: password},
-            firstName: {S: 'operator'},
-            lastName: {S: 'operator'},
-            email: {S: 'operator@test.com'},
-            role: {S: 'OPERATOR'}
-          }
-        },
-        physicalResourceId: cr.PhysicalResourceId.of('seed-operator')
-      },
-      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
-        resources: [usersTable.tableArn]
-      })
-    });
+    })
 
     // API Gateway
     const restApi = new apigateway.RestApi(this, 'VehicleAppApi', {
@@ -193,6 +168,7 @@ export class VehicleAppStack extends Stack {
         MISSIONS_TABLE: missionsTable.tableName,
         JOBS_TABLE: jobsTable.tableName,
         SENDER_EMAIL: process.env.SENDER_EMAIL || '',
+        VEHICLES_TABLE: vehiclesTable.tableName
       }
     });
 
@@ -200,6 +176,7 @@ export class VehicleAppStack extends Stack {
     missionsTable.grantReadWriteData(coreApiLambda);
     jobsTable.grantReadWriteData(coreApiLambda);
     imagesBucket.grantReadWrite(coreApiLambda);
+    vehiclesTable.grantReadWriteData(coreApiLambda);
 
     const entryApiLogGroup = new logs.LogGroup(this, 'EntryApiLogGroup', {
       logGroupName: `entry-api-lambda-logs-${env}`,
@@ -221,7 +198,8 @@ export class VehicleAppStack extends Stack {
         JWT_SECRET: process.env.JWT_SECRET || '',
         CONNECTIONS_TABLE: connectionsTable.tableName,
         JOBS_TABLE: jobsTable.tableName,
-        WEBSOCKET_ENDPOINT: webSocketUrl
+        WEBSOCKET_ENDPOINT: webSocketUrl,
+        TOKEN_EXPIRY: process.env.TOKEN_EXPIRY || '1h'
       }
     });
 
@@ -245,6 +223,27 @@ export class VehicleAppStack extends Stack {
       }
     });
     missionsTable.grantReadWriteData(createMissionLambda);
+
+    const updateVehicleLogs = new logs.LogGroup(this, 'UpdateVehicleLogs', {
+      logGroupName: `update-vehicle-logs-${env}`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
+    const updateVehicleLambda = new lambda.Function(this, 'UpdateVehicleLambda', {
+      functionName: `update-vehicle-lambda-${env}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'dist/update-vehicle-lambda.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../core-api')),
+      timeout: Duration.seconds(30),
+      memorySize: 256,
+      logGroup: updateVehicleLogs,
+      environment: {
+        NODE_ENV: env,
+        VEHICLES_TABLE: vehiclesTable.tableName
+      }
+    });
+    vehiclesTable.grantReadWriteData(updateVehicleLambda);
 
     const createJobsLogs = new logs.LogGroup(this, 'CreateJobsLogs', {
       logGroupName: `create-jobs-logs-${env}`,
@@ -273,7 +272,12 @@ export class VehicleAppStack extends Stack {
     });
 
     const isMissionCreated = new sfn.Choice(this, 'isMissionCreated');
-    const condition = sfn.Condition.isPresent('$.id');
+    const idPresent = sfn.Condition.isPresent('$.id');
+
+    const updateVehicleTask = new tasks.LambdaInvoke(this, 'UpdateVehicle', {
+      lambdaFunction: updateVehicleLambda,
+      outputPath: '$.Payload'
+    });
 
     const createJobsTask = new tasks.LambdaInvoke(this, 'CreateJobs', {
       lambdaFunction: createJobsLambda,
@@ -291,7 +295,7 @@ export class VehicleAppStack extends Stack {
         Content: {
           Simple: {
             Subject: {
-              'Data.$': "States.Format('New Mission: {}', $.mission_type)"
+              'Data.$': "States.Format('New Mission: {}', $.missionType)"
             },
             Body: {
               Html: {
@@ -310,7 +314,8 @@ export class VehicleAppStack extends Stack {
 
     const definition = createMissionTask
     .next(isMissionCreated
-      .when(condition, createJobsTask
+      .when(idPresent, updateVehicleTask
+        .next(createJobsTask)
         .next(sendEmailTask)
         .next(missionCreated)
       )
@@ -381,7 +386,7 @@ export class VehicleAppStack extends Stack {
     generateRoutes(restApi.root, entryApiEndpoints, entryIntegration);
 
     new CfnOutput(this, 'ApiUrl', {
-      value: restApi.url,
+      value: restApi.url.replace(/\/$/, ''),
       description: 'API Gateway URL'
     });
 
