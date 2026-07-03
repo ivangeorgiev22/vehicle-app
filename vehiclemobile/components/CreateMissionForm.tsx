@@ -46,7 +46,7 @@ export default function CreateMissionForm({seen, onClose, vehicles, onMissionCre
       const res = await callApi(`${API_URL}/missions`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-        body: JSON.stringify({missionType: missionType, vehicleId: selectedVehicle})
+        body: JSON.stringify({type: missionType, vehicleId: selectedVehicle})
       });
       if (res.ok) {
         Alert.alert('Mission created!');

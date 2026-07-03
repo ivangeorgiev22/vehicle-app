@@ -42,7 +42,7 @@ describe('MissionsService', () => {
     it('Returns mission with jobs and tasks', async () => {
       const mockMission = {
         id: '1',
-        missionType: 'Cleaning',
+        type: 'Cleaning',
         missionStatus: 'Created'
       };
       
@@ -50,7 +50,7 @@ describe('MissionsService', () => {
         {
           id: '1',
           missionId: '1',
-          jobTitle: 'Exterior Clean',
+          title: 'Exterior Clean',
           jobStatus: 'Backlog',
           tasks: JSON.stringify([
             {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
@@ -64,13 +64,13 @@ describe('MissionsService', () => {
       const res = await service.findOne('1');
       expect(res).toEqual({
         id: '1',
-        missionType: 'Cleaning',
+        type: 'Cleaning',
         missionStatus: 'Created',
         jobs: [
           {
             id: '1',
             missionId: '1',
-            jobTitle: 'Exterior Clean',
+            title: 'Exterior Clean',
             jobStatus: 'Backlog',
             tasks: [
               {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
@@ -85,7 +85,7 @@ describe('MissionsService', () => {
     it('Updates mission status', async () => {
       const mockMission = {
         id: '1',
-        missionType: 'Cleaning',
+        type: 'Cleaning',
         missionStatus: 'Created'
       };
 

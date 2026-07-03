@@ -1,7 +1,7 @@
 export const missionTemplates = {
   'Cleaning': [
     {
-      jobTitle: 'Exterior Clean',
+      title: 'Exterior Clean',
       tasks: [
         {
           key: 'clean-1',
@@ -23,7 +23,7 @@ export const missionTemplates = {
   ],
   'Fly Doctor': [
     {
-      jobTitle: 'Bring vehicle to warehouse',
+      title: 'Bring vehicle to warehouse',
       tasks: [
         {
           key: 'doctor-1',
@@ -35,7 +35,7 @@ export const missionTemplates = {
   ],
   'Maintenance': [
     {
-      jobTitle: 'Vehicle inspection',
+      title: 'Vehicle inspection',
       tasks: [
         {
           key: 'inspect-1',

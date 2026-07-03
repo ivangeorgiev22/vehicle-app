@@ -6,14 +6,14 @@ import { missionTemplates } from "./jobs/job-templates";
 const client = DynamoDBDocumentClient.from(new DynamoDBClient());
 
 export const handler = async (event: any) => {
-  const { id: missionId, missionType, vehicleId } = event;
-  const jobs = missionTemplates[missionType];
+  const { id: missionId, type, vehicleId } = event;
+  const jobs = missionTemplates[type];
 
   const createdJobs = jobs.map(job => ({
     id: randomUUID(),
     missionId,
     vehicleId,
-    jobTitle: job.jobTitle,
+    title: job.title,
     jobStatus: 'Backlog',
     tasks: job.tasks
   }));
@@ -33,7 +33,7 @@ export const handler = async (event: any) => {
 
   return {
     missionId,
-    missionType,
+    type,
     vehicleId,
     jobsCount: createdJobs.length,
     tasksCount: createdJobs.reduce((sum, job) => sum + job.tasks.length, 0)

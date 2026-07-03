@@ -33,7 +33,7 @@ describe('JobsService', () => {
       const mockJob = {
         id: '1',
         missionId: '1',
-        jobTitle: 'Exterior Clean',
+        title: 'Exterior Clean',
         jobStatus: 'Backlog',
         tasks: []
       };
@@ -49,7 +49,7 @@ describe('JobsService', () => {
       const mockJob = {
         id: '1',
         missionId: '1',
-        jobTitle: 'Exterior Clean',
+        title: 'Exterior Clean',
         jobStatus: 'Backlog',
         tasks: [
           {key: 'clean-1', description: 'Wash Vehicle', taskStatus: 'Waiting'}
@@ -68,7 +68,7 @@ describe('JobsService', () => {
         {
           id: '1',
           missionId: '1',
-          jobTitle: 'Exterior Clean',
+          title: 'Exterior Clean',
           jobStatus: 'Backlog',
           tasks: [{key: 'clean-1', description: 'Exterior clean', taskStatus: 'Waiting'}]
         }
@@ -95,7 +95,7 @@ describe('JobsService', () => {
       const mockJob = {
         id: '1',
         missionId: '1',
-        jobTitle: 'Exterior Clean',
+        title: 'Exterior Clean',
         jobStatus: 'Backlog',
         tasks: [
           {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waitign'}

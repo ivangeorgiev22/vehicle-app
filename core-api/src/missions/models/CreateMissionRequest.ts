@@ -1,3 +1,3 @@
 export interface CreateMissionRequest {
-  missionType: 'Cleaning' | 'Fly Doctor' | 'Maintenance'
+  type: 'Cleaning' | 'Fly Doctor' | 'Maintenance'
 }

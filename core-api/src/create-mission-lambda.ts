@@ -8,7 +8,7 @@ export const handler = async (event: any) => {
   const id = randomUUID();
   const mission = {
     id,
-    missionType: event.missionType,
+    type: event.type,
     missionStatus: 'Created',
     vehicleId: event.vehicleId
   };

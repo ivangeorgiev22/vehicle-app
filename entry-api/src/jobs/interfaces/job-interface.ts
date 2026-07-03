@@ -2,7 +2,7 @@ export interface Job {
   id: string;
   missionId: string;
   vehicle: Vehicle;
-  jobTitle: string;
+  title: string;
   jobTtatus: string;
   tasks: Task[];
 }

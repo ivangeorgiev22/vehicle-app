@@ -12,8 +12,7 @@ import { theme } from "../theme";
 
 interface Job {
   id: string;
-  jobTitle: string;
-  jobTtatus: string;
+  title: string;
   vehicle: Vehicle;
 }
 interface Vehicle {
@@ -80,7 +79,7 @@ export default function Jobs() {
             <View style={styles.jobItem}>
               <View style={styles.label} />
               <View style={styles.jobInfo}>
-                <Text style={styles.jobTitle}>{item.jobTitle}</Text>
+                <Text style={styles.jobTitle}>{item.title}</Text>
                 <Text style={styles.vehicle}>Vehicle Reg: {item.vehicle.plate}</Text>
               </View>
               <Icon name="arrow-right" size={15} />

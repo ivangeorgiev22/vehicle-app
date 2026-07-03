@@ -44,7 +44,7 @@ describe('MissionsService', () => {
 
   describe('create()', () => {
     it('Triggers Step Function execution', async () => {
-      await service.create({missionType: 'Cleaning', vehicleId: 'vehicle-1'});
+      await service.create({type: 'Cleaning', vehicleId: 'vehicle-1'});
 
       expect(mockSfn).toHaveBeenCalledTimes(1);
       expect(mockJobsGateway.broadcastJobs).toHaveBeenCalledTimes(1);
@@ -55,16 +55,16 @@ describe('MissionsService', () => {
     it('Calls API with id and returns mission with jobs', async () => {
       const mockMission = {
         id: '1',
-        mission_type: 'Cleaning',
-        mission_status: 'Created',
+        type: 'Cleaning',
+        missionStatus: 'Created',
         jobs: [
           {
             id: '1',
             mission_id: '1',
-            job_title: 'Exterior Clean',
-            job_status: 'Backlog',
+            title: 'Exterior Clean',
+            jobStatus: 'Backlog',
             tasks: [
-              {key: 'clean-1', description: 'Wash vehicle', task_status: 'Waiting'}
+              {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
             ]
           }
         ]
@@ -82,8 +82,8 @@ describe('MissionsService', () => {
     it('Should call API and return updated mission', async () => {
       const mockMission = {
         id: '1',
-        mission_type: 'Cleaning',
-        mission_status: 'In Progress'
+        type: 'Cleaning',
+        missionStatus: 'In Progress'
       };
       mockApiClient.updateMissionStatus.mockResolvedValue(mockMission);
 

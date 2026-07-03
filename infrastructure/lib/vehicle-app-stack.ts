@@ -295,7 +295,7 @@ export class VehicleAppStack extends Stack {
         Content: {
           Simple: {
             Subject: {
-              'Data.$': "States.Format('New Mission: {}', $.missionType)"
+              'Data.$': "States.Format('New Mission: {}', $.type)"
             },
             Body: {
               Html: {

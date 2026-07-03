@@ -38,7 +38,7 @@ describe.only('JobsService', () => {
         id: '1',
         missionId: '1',
         vehicleId: 'vehicle-1',
-        jobTitle: 'Exterior Clean',
+        title: 'Exterior Clean',
         jobStatus: 'Backlog',
         tasks: '[]'
       };
@@ -56,7 +56,7 @@ describe.only('JobsService', () => {
       const mockJob = {
         id: '1',
         missionId: '1',
-        jobTitle: 'Exterior Clean',
+        title: 'Exterior Clean',
         jobStatus: 'Backlog',
         tasks: JSON.stringify([
           {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
@@ -71,7 +71,7 @@ describe.only('JobsService', () => {
       expect(res).toEqual({
         id: '1',
         missionId: '1',
-        jobTitle: 'Exterior Clean',
+        title: 'Exterior Clean',
         jobStatus: 'Backlog',
         tasks: [
           {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Accepted'}
@@ -86,7 +86,7 @@ describe.only('JobsService', () => {
           id: '1',
           missionId: '1',
           vehicleId: 'vehicle-1',
-          jobTitle: 'Exterior Clean',
+          title: 'Exterior Clean',
           jobStatus: 'Backlog',
           tasks: JSON.stringify([{key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}])
         },
@@ -94,7 +94,7 @@ describe.only('JobsService', () => {
           id: '2',
           missionId: '1',
           vehicleId: 'vehicle-2',
-          jobTitle: 'Interior Clean',
+          title: 'Interior Clean',
           jobStatus: 'Backlog',
           tasks: JSON.stringify([{key: 'clean-2', description: 'Clean interior', taskStatus: 'Waiting'}])
         }
@@ -115,7 +115,7 @@ describe.only('JobsService', () => {
         Item: {
           id: '1',
           missionId: '1',
-          jobTitle: 'Exterior clean',
+          title: 'Exterior clean',
           jobStatus: 'Backlog',
           tasks: JSON.stringify([
             {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}
@@ -126,7 +126,7 @@ describe.only('JobsService', () => {
       expect(res).toEqual({
         id: '1',
         missionId: '1',
-        jobTitle: 'Exterior clean',
+        title: 'Exterior clean',
         jobStatus: 'Backlog',
         tasks: [
           {key: 'clean-1', description: 'Wash vehicle', taskStatus: 'Waiting'}

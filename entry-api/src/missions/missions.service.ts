@@ -14,7 +14,7 @@ export class MissionsService {
   async create(req: CreateMissionRequest): Promise<void> {
     await this.sfnClient.send(new StartExecutionCommand({
       stateMachineArn: process.env.STATE_MACHINE_ARN,
-      input: JSON.stringify({missionType: req.missionType, vehicleId: req.vehicleId})
+      input: JSON.stringify({type: req.type, vehicleId: req.vehicleId})
     }));
     await this.jobsGateway.broadcastJobs();
   }

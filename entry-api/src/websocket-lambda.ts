@@ -31,7 +31,6 @@ export const webSocketHandler = async(event: any) => {
       Item: {connectionId}
     }));
     console.log('connectionId saved to Db');
-    // await jobsGateway.sendJobs(connectionId);
     return {statusCode: 200, body: 'Connected'};
   }
 
