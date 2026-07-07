@@ -36,6 +36,7 @@
     "@types/aws-lambda": "^8.10.161",
     "axios": "^1.16.1",
     "form-data": "^4.0.5",
+    "jwks-rsa": "^3.1.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",

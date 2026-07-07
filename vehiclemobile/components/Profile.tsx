@@ -6,17 +6,19 @@ import { launchImageLibrary } from "react-native-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { theme } from "../theme";
 import { useFetch } from "../context/useFetch";
+import { useAuth0 } from "react-native-auth0";
 
 export default function Profile() {
   const {token, username, image, setImage, logout} = useAuth();
   const route = useRoute();
   const {id} = route.params as {id: string};
   const callApi = useFetch();
+  const {clearSession} = useAuth0();
+
 
   const uploadImage = async () => {
-    //open image gallery
     const res = await launchImageLibrary({mediaType: 'photo'});
-
+    
     if(res.didCancel || !res.assets || res.assets.length === 0) return;
 
     const image = res.assets[0];
@@ -56,6 +58,16 @@ export default function Profile() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      await clearSession();
+    } catch (error) {
+      console.log('Logout error:', error)
+    } finally {
+      logout();
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -82,7 +94,7 @@ export default function Profile() {
           </Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+      <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
         <Text style={styles.logoutBtnTxt}>Log out</Text>
       </TouchableOpacity>
     </SafeAreaView>

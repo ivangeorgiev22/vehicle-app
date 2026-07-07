@@ -52,14 +52,14 @@ export class ApiClient {
       filename: file.originalname,
       contentType: file.mimetype
     })
-    const res = await axios.post(`${this.baseUrl}/api/users/${id}/image`, formData, {
+    const res = await axios.post(`${this.baseUrl}/api/users/${encodeURIComponent(id)}/image`, formData, {
       headers: { ...formData.getHeaders()}
     });
     return res.data;
   }
 
   async getImage (id: string): Promise<{imageUrl: string | null}> {
-    const res = await axios.get(`${this.baseUrl}/api/users/${id}/image`);
+    const res = await axios.get(`${this.baseUrl}/api/users/${encodeURIComponent(id)}/image`);
     return res.data;
   }
 

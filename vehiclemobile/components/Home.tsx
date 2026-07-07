@@ -95,12 +95,14 @@ export default function Home () {
         onClose={() => setAddVehicleForm(false)}
         onVehicleAdded={fetchVehicles} 
       />
-      <CreateMissionForm
-        seen={createMissionForm}
-        onClose={() => setCreateMissionForm(false)}
-        vehicles={vehicles}
-        onMissionCreated={() => {setCreateMissionForm(false); setTimeout(() => fetchVehicles(), 2500)}} 
-      />
+      {createMissionForm && (
+        <CreateMissionForm
+          seen={createMissionForm}
+          onClose={() => setCreateMissionForm(false)}
+          vehicles={vehicles}
+          onMissionCreated={() => {setCreateMissionForm(false); setTimeout(() => fetchVehicles(), 2500)}} 
+        />
+      )}
     </SafeAreaView>
   );
 }
