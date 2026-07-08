@@ -14,24 +14,24 @@ export class ApiClient {
     const res = await axios.post(`${this.baseUrl}/api/users/validate`, {username, password});
     return res.data;
   }
-  
+
   async getMission(id: string): Promise<MissionWithJobs> {
     const res = await axios.get(`${this.baseUrl}/api/missions/${id}`);
     return res.data;
   }
 
-  async updateMissionStatus(id: string, mission_status: string): Promise<Mission | null> {
-    const res = await axios.patch(`${this.baseUrl}/api/missions/${id}/status`, {mission_status});
+  async updateMissionStatus(id: string, missionStatus: string): Promise<Mission | null> {
+    const res = await axios.patch(`${this.baseUrl}/api/missions/${id}/status`, {missionStatus});
     return res.data;
   }
 
-  async updateJobStatus(id: string, job_status: string): Promise<Job | null> {
-    const res = await axios.patch(`${this.baseUrl}/api/jobs/${id}/status`, {job_status});
+  async updateJobStatus(id: string, jobStatus: string): Promise<Job | null> {
+    const res = await axios.patch(`${this.baseUrl}/api/jobs/${id}/status`, {jobStatus});
     return res.data;
   }
 
-  async updateTaskStatus(id: string, key: string, task_status: string): Promise<Job | null> {
-    const res = await axios.patch(`${this.baseUrl}/api/jobs/${id}/task/${key}/status`, {task_status});
+  async updateTaskStatus(id: string, key: string, taskStatus: string): Promise<Job | null> {
+    const res = await axios.patch(`${this.baseUrl}/api/jobs/${id}/task/${key}/status`, {taskStatus});
     return res.data;
   }
 
@@ -45,7 +45,7 @@ export class ApiClient {
     return res.data;
   }
 
-  async uploadImage(id: string, file: Express.Multer.File): Promise<{image_url: string}> {
+  async uploadImage(id: string, file: Express.Multer.File): Promise<{imageUrl: string}> {
     const formData = new FormData(); //create a new formData instance
     
     formData.append('image', file.buffer, {
@@ -58,8 +58,23 @@ export class ApiClient {
     return res.data;
   }
 
-  async getImage (id: string): Promise<{image_url: string | null}> {
+  async getImage (id: string): Promise<{imageUrl: string | null}> {
     const res = await axios.get(`${this.baseUrl}/api/users/${id}/image`);
+    return res.data;
+  }
+
+  async createVehicle(plate: string, battery: number) {
+    const res = await axios.post(`${this.baseUrl}/api/vehicles`, {plate, battery});
+    return res.data;
+  }
+
+  async getVehicles() {
+    const res = await axios.get(`${this.baseUrl}/api/vehicles`);
+    return res.data;
+  }
+
+  async updateVehicleStatus(id: string, vehicleStatus: string) {
+    const res = await axios.patch(`${this.baseUrl}/api/vehicles/${id}/status`, {vehicleStatus});
     return res.data;
   }
 }

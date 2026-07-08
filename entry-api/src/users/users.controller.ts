@@ -13,13 +13,13 @@ export class UsersController {
   async uploadImage(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File
-  ): Promise<{image_url: string}> {
+  ): Promise<{imageUrl: string}> {
     const img = await this.usersService.uploadImage(id, file);
     return img;
   }
 
   @Get(':id/image')
-  async getImage(@Param('id') id: string): Promise<{image_url: string | null}> {
+  async getImage(@Param('id') id: string): Promise<{imageUrl: string | null}> {
     const img = await this.usersService.getImage(id);
     return img;
   }

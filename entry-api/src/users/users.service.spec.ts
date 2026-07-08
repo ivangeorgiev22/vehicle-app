@@ -29,7 +29,7 @@ describe('UsersService', () => {
   describe('uploadImage()', () => {
     it('Calls API with id and file', async () => {
       const mockFile = {originalName: 'photo.jpg', mimetype: 'image/jpeg', buffer: Buffer.from('')} as unknown as Express.Multer.File;
-      mockApiClient.uploadImage.mockResolvedValue({image_url: 'https://s3.amazonaws.com/photo.jpg'});
+      mockApiClient.uploadImage.mockResolvedValue({imageUrl: 'https://s3.amazonaws.com/photo.jpg'});
 
       await service.uploadImage('1', mockFile);
       expect(mockApiClient.uploadImage).toHaveBeenCalledWith('1', mockFile);
@@ -37,7 +37,7 @@ describe('UsersService', () => {
 
     it('Returns presigned url on success', async () => {
       const mockFile = {originalName: 'photo.jpg', mimetype: 'image/jpeg', buffer: Buffer.from('')} as unknown as Express.Multer.File;
-      const mockRes = {image_url: 'https://s3.amazonaws.com/photo.jpg'};
+      const mockRes = {imageUrl: 'https://s3.amazonaws.com/photo.jpg'};
       mockApiClient.getImage.mockResolvedValue(mockRes);
 
       const res = await service.uploadImage('1', mockFile);
@@ -47,26 +47,26 @@ describe('UsersService', () => {
 
   describe('getImage()', () => {
     it('Calls API with correct id', async () => {
-      mockApiClient.getImage.mockResolvedValue({image_url: null});
+      mockApiClient.getImage.mockResolvedValue({imageUrl: null});
       await service.getImage('1');
       expect(mockApiClient.getImage).toHaveBeenCalledWith('1');
     });
 
     it('Returns presigned url', async () => {
-      const mockRes = {image_url: 'https://s3.amazonaws.com/photo.jpg'};
+      const mockRes = {imageUrl: 'https://s3.amazonaws.com/photo.jpg'};
       mockApiClient.getImage.mockResolvedValue(mockRes);
 
       const res = await service.getImage('1');
 
       expect(res).toEqual(mockRes);
-      expect(res.image_url).not.toBeNull();
+      expect(res.imageUrl).not.toBeNull();
     });
 
     it('Should return null if no image uploaded', async () => {
-      mockApiClient.getImage.mockResolvedValue({image_url: null});
+      mockApiClient.getImage.mockResolvedValue({imageUrl: null});
 
       const res = await service.getImage('1');
-      expect(res.image_url).toBeNull();
+      expect(res.imageUrl).toBeNull();
     });
   });
 });

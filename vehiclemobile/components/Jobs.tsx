@@ -12,8 +12,11 @@ import { theme } from "../theme";
 
 interface Job {
   id: string;
-  job_title: string;
-  job_status: string;
+  title: string;
+  vehicle: Vehicle;
+}
+interface Vehicle {
+  plate: string;
 }
 
 export default function Jobs() {
@@ -76,7 +79,8 @@ export default function Jobs() {
             <View style={styles.jobItem}>
               <View style={styles.label} />
               <View style={styles.jobInfo}>
-                <Text style={styles.jobTitle}>{item.job_title}</Text>
+                <Text style={styles.jobTitle}>{item.title}</Text>
+                <Text style={styles.vehicle}>Vehicle Reg: {item.vehicle.plate}</Text>
               </View>
               <Icon name="arrow-right" size={15} />
             </View>
@@ -142,4 +146,10 @@ const styles= StyleSheet.create({
   jobInfo: {
     flex: 1
   },
+  vehicle: {
+    fontSize: theme.fontSize.subtitle,
+    color: '#777',
+    marginTop: 2,
+    fontStyle: 'italic'
+  }
 })

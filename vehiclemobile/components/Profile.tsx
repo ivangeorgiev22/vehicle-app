@@ -39,7 +39,7 @@ export default function Profile() {
 
       if (result.ok) {
         const data = await result.json();
-        const imageRes = await fetch(data.image_url);
+        const imageRes = await fetch(data.imageUrl);
         const blob = await imageRes.blob();
         const reader = new FileReader();
         reader.onloadend = () => {

@@ -16,7 +16,7 @@ export class UsersImageService {
     responseChecksumValidation: 'WHEN_REQUIRED'
   });
   //express.multer.file - type of uploaded file after it's proccessed by the middleware
-  async uploadImage(userId: string, file: Express.Multer.File): Promise<{image_url:string}> {
+  async uploadImage(userId: string, file: Express.Multer.File): Promise<{imageUrl:string}> {
     const key = `${userId}-image.png`;
 
     await this.s3.send(new PutObjectCommand({
@@ -36,10 +36,10 @@ export class UsersImageService {
       {expiresIn: 3600}
     )
 
-    return {image_url: signedUrl};
+    return {imageUrl: signedUrl};
   };
 
-  async getImage(userId: string): Promise<{image_url: string | null}> {
+  async getImage(userId: string): Promise<{imageUrl: string | null}> {
     const key = `${userId}-image.png`;
     try {
       await this.s3.send(new HeadObjectCommand({
@@ -47,7 +47,7 @@ export class UsersImageService {
         Key: key
       }));
     } catch (error) {
-      return {image_url: null};
+      return {imageUrl: null};
     }
     
     const signedUrl = await getSignedUrl(
@@ -58,7 +58,7 @@ export class UsersImageService {
       }),
       {expiresIn: 3600, unhoistableHeaders: new Set(['x-amz-checksum-mode'])}
     )
-    return {image_url: signedUrl};
+    return {imageUrl: signedUrl};
   };
 
 }

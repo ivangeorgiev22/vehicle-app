@@ -17,7 +17,7 @@ export class JobsController {
   }
 
   @Patch(':id/task/:key/status')
-  async updateTaskStatus(@Param('id') id: string, @Param('key') key: string, @Body() req: Pick<Task, 'task_status'>): Promise<Job | null> {
+  async updateTaskStatus(@Param('id') id: string, @Param('key') key: string, @Body() req: Pick<Task, 'taskStatus'>): Promise<Job | null> {
     const task = await this.jobsService.updateTaskStatus(id, key, req);
     return task;
   }

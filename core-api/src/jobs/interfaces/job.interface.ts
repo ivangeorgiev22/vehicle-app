@@ -1,18 +1,18 @@
 export interface Task {
   key: string;
   description: string;
-  task_status: 'Waiting' | 'Accepted' | 'Completed'
+  taskStatus: 'Waiting' | 'Accepted' | 'Completed'
 }
 
-export interface JobTemplate {
-  job_title: string;
-  tasks: Task[];
+export interface Vehicle {
+  plate: string;
 }
 
 export interface Job {
   id: string;
-  mission_id: number;
-  job_title: string;
-  job_status: string;
+  missionId: string;
+  vehicle: Vehicle;
+  title: string;
+  jobStatus: string;
   tasks: Task[];
 }

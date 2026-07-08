@@ -21,9 +21,9 @@ export class JobsController {
   async updateTaskStatus(
     @Param('id') id: string, 
     @Param('key') key: string,
-    @Body() req: Pick<Task, 'task_status'>
+    @Body() req: Pick<Task, 'taskStatus'>
   ): Promise<Job> {
-    const job = await this.jobsService.updateTaskStatus(id, key, req.task_status);
+    const job = await this.jobsService.updateTaskStatus(id, key, req.taskStatus);
 
     if (!job) {
       throw new NotFoundException('Task not found')

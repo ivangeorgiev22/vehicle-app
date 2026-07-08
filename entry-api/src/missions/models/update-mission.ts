@@ -1,3 +1,3 @@
 export interface UpdateMission {
-  mission_status: 'Created' | 'In Progress' | 'Completed' | 'Cancelled';
+  missionStatus: 'Created' | 'In Progress' | 'Completed' | 'Cancelled';
 }

@@ -9,11 +9,11 @@ export class JobsService {
   constructor(private coreApi: ApiClient) {}
 
   updateStatus(id: string, req: UpdateJobStatus): Promise<Job | null> {
-    return this.coreApi.updateJobStatus(id, req.job_status);
+    return this.coreApi.updateJobStatus(id, req.jobStatus);
   }
 
-  updateTaskStatus(id: string, key: string, req: Pick<Task, 'task_status'>): Promise<Job | null> {
-    return this.coreApi.updateTaskStatus(id,key, req.task_status);
+  updateTaskStatus(id: string, key: string, req: Pick<Task, 'taskStatus'>): Promise<Job | null> {
+    return this.coreApi.updateTaskStatus(id,key, req.taskStatus);
   }
 
   getBacklogJobs(): Promise<Job[]> {

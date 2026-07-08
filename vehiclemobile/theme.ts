@@ -6,7 +6,7 @@ export const theme = {
     text: '#ffffff',
     button: '#1a1a2e',
     avatar: '#adafb3',
-    border: '#e0e0e0'
+    border: '#aba9a9'
   },
   spacing: {
     horizontal: 24,
