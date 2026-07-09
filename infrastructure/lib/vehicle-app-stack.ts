@@ -71,7 +71,17 @@ export class VehicleAppStack extends Stack {
     const imagesBucket = new s3.Bucket(this, `operator-images-bucket-${env}`, {
       bucketName: `operator-images-bucket-${env}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: RemovalPolicy.DESTROY
+      removalPolicy: RemovalPolicy.DESTROY,
+      cors: [
+        {
+          allowedHeaders: ['*'],
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.POST,
+          ],
+          allowedOrigins: ['*']
+        }
+      ]
     });
 
     new cr.AwsCustomResource(this, 'SeedUsers', {
@@ -102,6 +112,11 @@ export class VehicleAppStack extends Stack {
       description: `Vehicle App ${env} API`,
       deployOptions: {
         stageName: env
+      },
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowHeaders: apigateway.Cors.DEFAULT_HEADERS
       }
     });
 
@@ -267,6 +282,30 @@ export class VehicleAppStack extends Stack {
     });
     jobsTable.grantReadWriteData(createJobsLambda);
 
+    const broadcastJobsLogs = new logs.LogGroup(this, 'broadcastJobsLogs', {
+      logGroupName: `broadcast-jobs-logs-${env}`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
+    const broadcastJobsLambda = new lambda.Function(this, 'broadcastJobsLambda', {
+      functionName: `broadcast-jobs-lambda-${env}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'dist/broadcast-jobs-lambda.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../entry-api')),
+      timeout: Duration.seconds(30),
+      memorySize: 256,
+      logGroup: broadcastJobsLogs,
+      environment: {
+        NODE_ENV: env,
+        BASE_URL: apiUrl,
+        CONNECTIONS_TABLE: connectionsTable.tableName,
+        WEBSOCKET_ENDPOINT: webSocketUrl
+      }
+    });
+    connectionsTable.grantReadWriteData(broadcastJobsLambda);
+    webSocketApi.grantManageConnections(broadcastJobsLambda);
+
     const createMissionTask = new tasks.LambdaInvoke(this, 'CreateMission', {
       lambdaFunction: createMissionLambda,
       outputPath: '$.Payload',
@@ -310,6 +349,11 @@ export class VehicleAppStack extends Stack {
       resultPath: sfn.JsonPath.DISCARD
     });
 
+    const broadcastJobsTask = new tasks.LambdaInvoke(this, 'BroadcastJobs', {
+      lambdaFunction: broadcastJobsLambda,
+      outputPath: '$.Payload'
+    });
+
     const missionCreated = new sfn.Succeed(this, 'MissionCreated');
     const missionFailed = new sfn.Fail(this, 'MissionCreationFailed');
 
@@ -318,6 +362,7 @@ export class VehicleAppStack extends Stack {
       .when(idPresent, updateVehicleTask
         .next(createJobsTask)
         .next(sendEmailTask)
+        .next(broadcastJobsTask)
         .next(missionCreated)
       )
       .otherwise(missionFailed)

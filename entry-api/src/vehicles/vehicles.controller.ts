@@ -8,13 +8,12 @@ import { RolesGuard } from "../roles/roles.guard";
 import { Roles } from "../roles/roles.decorator";
 
 @Controller('vehicles')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles('ADMIN')
 export class VehiclesController {
   constructor(private vehiclesService: VehiclesService) {}
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles('ADMIN')
   async create(@Body() req: CreateVehicleRequest): Promise<Vehicle> {
     return await this.vehiclesService.create(req);
   }
@@ -25,8 +24,6 @@ export class VehiclesController {
   }
 
   @Patch(':id/status')
-  @UseGuards(RolesGuard)
-  @Roles('ADMIN')
   async updateStatus(@Param('vehicleId') id: string, @Body() req: UpdateVehicleStatus): Promise<Vehicle> {
     const vehicle = await this.vehiclesService.updateStatus(id, req);
     if (!vehicle) throw new NotFoundException('Vehicle Not Found');
