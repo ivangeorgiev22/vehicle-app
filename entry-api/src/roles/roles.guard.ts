@@ -11,7 +11,8 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     const { user } = context.switchToHttp().getRequest();
-    const userRoles = user['https://vehicle-app/roles'] || [];
+    const rolesClaim = `${process.env.AUTH0_NAMESPACE}/roles`
+    const userRoles = user[rolesClaim] || [];
     return roles.some(role => userRoles.includes(role));
   }
 }
