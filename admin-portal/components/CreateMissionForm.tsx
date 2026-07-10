@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import styles from '@/components/CreateMissionForm.module.css';
-import { useFetch } from "@/hooks/useFetch";
+import { MdClose } from "react-icons/md";
 
 interface Vehicle {
   id: string;
@@ -18,7 +18,6 @@ export default function CreateMissionForm({onClose, vehicles, onMissionCreated}:
   const [missionType, setMissionType] = useState('')
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const {getAccessTokenSilently} = useAuth0();
-  const callApi = useFetch();
 
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -26,7 +25,7 @@ export default function CreateMissionForm({onClose, vehicles, onMissionCreated}:
 
     try {
       const token = await getAccessTokenSilently();
-      const res = await callApi(`${process.env.NEXT_PUBLIC_API_URL}/missions`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/missions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,11 +48,16 @@ export default function CreateMissionForm({onClose, vehicles, onMissionCreated}:
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.form}>
+    <div className={styles.container} onClick={onClose}>
+      <div className={styles.form} onClick={e => e.stopPropagation()}>
         <div className={styles.header}>
           <h2>Create Mission</h2>
-          <button onClick={onClose}>X</button>
+          <button 
+            onClick={onClose}
+            className={styles.closeBtn}
+          >
+            <MdClose />
+          </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.inputContainer}>

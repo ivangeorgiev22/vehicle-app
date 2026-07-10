@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Auth0ProviderWrapper from "@/components/Auth0Provider";
+import { ImageProvider } from "@/context/imageContext";
 
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Auth0ProviderWrapper>
-          {children}
+          <ImageProvider>
+           {children}
+          </ImageProvider>
         </Auth0ProviderWrapper>
       </body>
     </html>

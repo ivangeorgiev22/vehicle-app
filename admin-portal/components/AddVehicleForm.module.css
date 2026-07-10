@@ -48,3 +48,9 @@
   cursor: pointer;
   margin-top: 15px;
 }
+.closeBtn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 25px;
+}

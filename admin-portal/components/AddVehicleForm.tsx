@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import styles from '@/components/AddVehicleForm.module.css';
-import { useFetch } from "@/hooks/useFetch";
+import { MdClose } from "react-icons/md";
 
 interface AddVehicleFormProps {
   onClose: () => void;
@@ -12,7 +12,6 @@ export default function AddVehicleForm({onClose, onVehicleAdded}: AddVehicleForm
   const [plate, setPlate] = useState('');
   const [battery, setBattery] = useState('');
   const {getAccessTokenSilently} = useAuth0();
-  const callApi = useFetch();
 
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -20,7 +19,7 @@ export default function AddVehicleForm({onClose, onVehicleAdded}: AddVehicleForm
 
     try {
       const token = await getAccessTokenSilently();
-      const res = await callApi(`${process.env.NEXT_PUBLIC_API_URL}/vehicles`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vehicles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,11 +42,16 @@ export default function AddVehicleForm({onClose, onVehicleAdded}: AddVehicleForm
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.form}>
+    <div className={styles.container} onClick={onClose}>
+      <div className={styles.form} onClick={e => e.stopPropagation()}>
         <div className={styles.header}>
           <h2>Add Vehicle</h2>
-          <button onClick={onClose}>X</button>
+          <button 
+          onClick={onClose}
+          className={styles.closeBtn}
+          >
+            <MdClose />
+          </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.inputContainer}>
@@ -70,7 +74,7 @@ export default function AddVehicleForm({onClose, onVehicleAdded}: AddVehicleForm
               className={styles.input}
             />
           </div>
-          <button type="submit" className={styles.button}>Add vehicle</button>
+          <button type="submit" className={styles.button}>Add</button>
         </form>
       </div>
     </div>

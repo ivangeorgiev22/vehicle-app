@@ -2,16 +2,17 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useRef } from "react";
 import styles from '@/components/Profile.module.css';
+import { MdClose } from "react-icons/md";
+import { useImage } from "@/context/imageContext";
 
 interface ProfileProps {
   onClose: () => void;
-  image: string;
-  onImageUpdate: (base64: string) => void;
 }
 
-export default function Profile({onClose, onImageUpdate, image}: ProfileProps) {
+export default function Profile({onClose}: ProfileProps) {
   const {user, logout, getAccessTokenSilently} = useAuth0();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const {profileImage, setProfileImage} = useImage();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -35,7 +36,7 @@ export default function Profile({onClose, onImageUpdate, image}: ProfileProps) {
         reader.onloadend = () => {
           const base64 = reader.result as string;
           localStorage.setItem('profileImage', base64);
-          onImageUpdate(base64);
+          setProfileImage(base64);
         };
         reader.readAsDataURL(blob);
         alert('Image uploaded successfully');
@@ -49,18 +50,25 @@ export default function Profile({onClose, onImageUpdate, image}: ProfileProps) {
   }
 
   return (
-    <div onClick={onClose}>
-      <div onClick={e => e.stopPropagation()}>
-        <div>
+    <div onClick={onClose} className={styles.container}>
+      <div onClick={e => e.stopPropagation()} className={styles.form}>
+        <div className={styles.header}>
           <h2>Profile</h2>
-          <button onClick={onClose}>X</button>
+          <button 
+            onClick={onClose}
+            className={styles.closeBtn}
+          >
+            <MdClose />
+          </button>
         </div>
-
-        <div>
-          <img src={image || user?.picture || ''} alt="avatar" />
+        <div className={styles.avatar}>
+          <img 
+            src={profileImage || user?.picture || ''} 
+            alt="avatar"
+            className={styles.img} 
+          />
           <p>{user?.name}</p>
         </div>
-
         <input 
           type="file"
           accept="image/*"
@@ -68,11 +76,18 @@ export default function Profile({onClose, onImageUpdate, image}: ProfileProps) {
           onChange={handleImageUpload}
           style={{display: 'none'}} 
         />
-        <div>
-          <button onClick={() => fileInputRef.current?.click()}>
+        <div className={styles.buttons}>
+          <button onClick={() => fileInputRef.current?.click()} className={styles.uploadBtn}>
             Upload Image
           </button>
-          <button onClick={() => logout({logoutParams: {returnTo: window.location.origin}})}></button>
+          <button 
+            onClick={() => {
+              localStorage.removeItem('profileImage')
+              logout({logoutParams: {returnTo: window.location.origin}})}} 
+            className={styles.logoutBtn}
+          >
+            Logout
+          </button>
         </div>
       </div>
     </div>

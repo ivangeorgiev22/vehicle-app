@@ -10,9 +10,10 @@ export default function Auth0ProviderWrapper({children}: {children: React.ReactN
       authorizationParams={{ 
         redirect_uri: typeof window !== 'undefined' ? window.location.origin : '',
         audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-        scope: 'openid profile email'
+        scope: 'openid profile email offline_access'
        }}
-       cacheLocation="localstorage"
+       useRefreshTokens={true}
+       useRefreshTokensFallback={true}
     >
       {children}
     </Auth0Provider>
