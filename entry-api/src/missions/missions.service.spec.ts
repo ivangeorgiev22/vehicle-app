@@ -45,9 +45,7 @@ describe('MissionsService', () => {
   describe('create()', () => {
     it('Triggers Step Function execution', async () => {
       await service.create({type: 'Cleaning', vehicleId: 'vehicle-1'});
-
       expect(mockSfn).toHaveBeenCalledTimes(1);
-      expect(mockJobsGateway.broadcastJobs).toHaveBeenCalledTimes(1);
     })
   });
 

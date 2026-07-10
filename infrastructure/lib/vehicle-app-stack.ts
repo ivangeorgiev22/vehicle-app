@@ -14,8 +14,6 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { emailTemplate } from '../templates/email-template';
-import * as cr from 'aws-cdk-lib/custom-resources';
-import { users } from './seed/users';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -83,22 +81,6 @@ export class VehicleAppStack extends Stack {
         }
       ]
     });
-
-    new cr.AwsCustomResource(this, 'SeedUsers', {
-      onCreate: {
-        service: 'DynamoDB',
-        action: 'batchWriteItem',
-        parameters: {
-          RequestItems: {
-            [usersTable.tableName]: users
-          }
-        },
-        physicalResourceId: cr.PhysicalResourceId.of('seed-users')
-      },
-      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
-        resources: [usersTable.tableArn]
-      })
-    })
 
     // API Gateway
     const restApi = new apigateway.RestApi(this, 'VehicleAppApi', {
@@ -183,7 +165,6 @@ export class VehicleAppStack extends Stack {
         USERS_TABLE: usersTable.tableName,
         MISSIONS_TABLE: missionsTable.tableName,
         JOBS_TABLE: jobsTable.tableName,
-        SENDER_EMAIL: process.env.SENDER_EMAIL || '',
         VEHICLES_TABLE: vehiclesTable.tableName
       }
     });

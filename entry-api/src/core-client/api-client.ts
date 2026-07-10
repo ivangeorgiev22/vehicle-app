@@ -1,19 +1,12 @@
-//communication with core api
 import { Injectable } from "@nestjs/common";
 import axios from "axios";
 import FormData from "form-data";
 import { Mission, MissionWithJobs } from "../missions/interfaces/missions-interface";
 import { Job } from "../jobs/interfaces/job-interface";
-import { User } from "../auth/interfaces/auth-interface";
 
 @Injectable()
 export class ApiClient {
   private baseUrl = process.env.BASE_URL;
-
-  async validateUser (username: string, password: string): Promise<User> {
-    const res = await axios.post(`${this.baseUrl}/api/users/validate`, {username, password});
-    return res.data;
-  }
 
   async getMission(id: string): Promise<MissionWithJobs> {
     const res = await axios.get(`${this.baseUrl}/api/missions/${id}`);

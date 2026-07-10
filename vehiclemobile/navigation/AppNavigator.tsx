@@ -1,5 +1,4 @@
 import Login from "../components/Login";
-import Home from "../components/Home";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Jobs from "../components/Jobs";
 import JobDetails from "../components/JobDetails";
@@ -12,7 +11,7 @@ import { useEffect } from "react";
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  const {token, isAdmin, setToken, setIsAdmin, setUsername, setUserId, setImage} = useAuth();
+  const {token, setToken, setUsername, setUserId, setImage} = useAuth();
 
   const session = async () => {
     try {
@@ -22,7 +21,6 @@ export default function AppNavigator() {
       if(stored) {
         const session = JSON.parse(stored);
         setToken(session.token);
-        setIsAdmin(session.isAdmin);
         setUsername(session.username);
         setUserId(session.userId);
         setImage(image ?? '');
@@ -40,14 +38,8 @@ export default function AppNavigator() {
     <Stack.Navigator screenOptions={{headerShown: false}}>
       {token ? (
         <>
-          {isAdmin ? (
-            <Stack.Screen name="Home" component={Home} />
-          ):(
-            <>
-              <Stack.Screen name="Jobs" component={Jobs} />
-              <Stack.Screen name="Job Details" component={JobDetails} />
-            </>
-          )}
+          <Stack.Screen name="Jobs" component={Jobs} />
+          <Stack.Screen name="Job Details" component={JobDetails} /> 
           <Stack.Screen name= "Profile" component={Profile} />
         </>
       ):(

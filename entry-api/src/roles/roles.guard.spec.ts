@@ -39,7 +39,7 @@ describe('RolesGuard', () => {
         getHandler: jest.fn(),
         switchToHttp: jest.fn().mockReturnValue({
           getRequest: jest.fn().mockReturnValue({
-            user: {role: 'ADMIN'}
+            user: {'https://vehicle-app/roles': ['ADMIN']}
           })
         })
       } as unknown as ExecutionContext;
@@ -55,7 +55,7 @@ describe('RolesGuard', () => {
         getHandler: jest.fn(),
         switchToHttp: jest.fn().mockReturnValue({
           getRequest: jest.fn().mockReturnValue({
-            user: {role: 'USER'}
+            user: {'https://vehicle-app/roles': ['OPERATOR']}
           })
         })
       } as unknown as ExecutionContext;
