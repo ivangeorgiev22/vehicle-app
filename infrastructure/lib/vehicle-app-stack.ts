@@ -141,7 +141,8 @@ export class VehicleAppStack extends Stack {
         JOBS_TABLE: jobsTable.tableName,
         WEBSOCKET_ENDPOINT: webSocketUrl,
         BASE_URL: apiUrl,
-        JWT_SECRET: process.env.JWT_SECRET || '',
+        AUTH0_DOMAIN: process.env.AUTH0_DOMAIN || '',
+        AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE || ''
 
       }
     });
@@ -195,11 +196,12 @@ export class VehicleAppStack extends Stack {
       environment: {
         NODE_ENV: env,
         BASE_URL: apiUrl,
-        JWT_SECRET: process.env.JWT_SECRET || '',
         CONNECTIONS_TABLE: connectionsTable.tableName,
         JOBS_TABLE: jobsTable.tableName,
         WEBSOCKET_ENDPOINT: webSocketUrl,
-        TOKEN_EXPIRY: process.env.TOKEN_EXPIRY || '1h'
+        AUTH0_DOMAIN: process.env.AUTH0_DOMAIN || '',
+        AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE || '',
+        AUTH0_NAMESPACE: process.env.AUTH0_NAMESPACE || ''
       }
     });
 

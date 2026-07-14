@@ -1,24 +1,32 @@
-import { Injectable } from "@nestjs/common";
-import { PassportStrategy } from "@nestjs/passport";
-import { ExtractJwt, Strategy} from "passport-jwt";
-import { JwtPayload, JwtUser } from "./interfaces/jwt-interface";
+import { Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { passportJwtSecret } from 'jwks-rsa';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
-    //extract token from request header and validate the secret key
     super({
+      secretOrKeyProvider: passportJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 15,
+        cacheMaxEntries: 5,
+        cacheMaxAge: 600000,
+        jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
+        handleSigningKeyError: (err, cb) => {
+          console.log('JWKS signing key error:', err);
+          cb(err);
+        }
+      }),
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: 'super-super-secret-key'
+      audience: process.env.AUTH0_AUDIENCE,
+      issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+      algorithms: ['RS256']
     });
   }
-  //once token validation is successful validate runs 
-  async validate(payload: JwtPayload): Promise<JwtUser> {
-    return {
-      id: payload.sub,
-      username: payload.username,
-      role: payload.role
-    };
+
+  validate(payload: any) {
+    return payload;
   }
 }

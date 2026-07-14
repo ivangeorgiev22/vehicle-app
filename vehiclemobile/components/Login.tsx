@@ -1,20 +1,19 @@
-import { useState } from "react";
-import { View, Text, TextInput, StyleSheet,Alert, TouchableOpacity, Pressable } from "react-native";
+import { useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Params } from "../navigation/types";
 import { useAuth } from "../context/authContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_URL } from "@env";
+import { API_URL, AUTH0_AUDIENCE, AUTH0_NAMESPACE } from "@env";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Icon from "react-native-vector-icons/Feather";
 import { theme } from "../theme";
+import { useAuth0 } from "react-native-auth0";
 
 export default function Login () {
-  const { setUsername, setToken, setIsAdmin, setUserId, setImage } = useAuth();
-  const [username, setUsernameInput] = useState('');
-  const [password, setPassword] = useState('');
+  const { setUsername, setToken, setIsAdmin, setUserId, setImage, token } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
+  const {authorize, user, getCredentials} = useAuth0();
 
   const getImage = async (userId: string, token: string) => {
     try {
@@ -22,11 +21,13 @@ export default function Login () {
         headers: {'Authorization': `Bearer ${token}`}
       });
       const data = await res.json();
-      if(!data.imageUrl) return;
-
+      if(!data.imageUrl) {
+        setImage(user?.picture || '');
+        await AsyncStorage.setItem('image', user?.picture || '');
+        return;
+      };
       const imgRes = await fetch(data.imageUrl);
       const blob = await imgRes.blob();
-
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
@@ -38,82 +39,75 @@ export default function Login () {
       console.log('Error', error);
     }
   }
+  const handleLogin = async () => {
+    try {
+      const credentials = await getCredentials();
+      if (!credentials) return;
+
+      const token = credentials.accessToken;
+      const rolesClaim = `${AUTH0_NAMESPACE}/roles`
+      const isAdmin = ((user as any)[rolesClaim] as string[] || []).includes('ADMIN');
+      const userId = user?.sub || '';
+      const username = user?.name || '';
+      const picture = user?.picture || '';
+
+      setToken(token);
+      setIsAdmin(isAdmin);
+      setUsername(username);
+      setUserId(userId);
+      setImage(picture);
+      getImage(userId, token);
+
+      await AsyncStorage.setItem('session', JSON.stringify({
+        token,
+        isAdmin,
+        username,
+        userId,
+        image: picture
+      }));
+
+      if(isAdmin) {
+        navigation.navigate('Home');
+      } else {
+        navigation.navigate('Jobs');
+      }
+    } catch (error) {
+      console.log('Error handling login', error);
+    }
+  };
 
   const login = async () => {
     try {
-      const res = await fetch(
-        `${API_URL}/auth/login`,
-        {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({username,password})
-        }
-      )
-      const data = await res.json();
-
-      if (res.ok) {
-        //save for in memory use.
-        setUsername(username);
-        setToken(data.accessToken);
-        setIsAdmin(data.isAdmin);
-        setUserId(data.user.id);
-        getImage(data.user.id, data.accessToken);
-
-        await AsyncStorage.setItem('session', JSON.stringify({
-          token: data.accessToken,
-          isAdmin: data.isAdmin,
-          username: username,
-          userId: data.user.id,
-        }))
-
-        if (data.isAdmin) {
-          navigation.navigate('Home');
-        } else {
-          navigation.navigate('Jobs');
-        }
-        setUsernameInput('');
-        setPassword('');
-      } else {
-        Alert.alert('Invalid credentials')
-      }
+      await authorize({
+        scope: 'openid profile email',
+        audience: AUTH0_AUDIENCE,
+      });
     } catch (error) {
-      console.log('Error', error);
+      console.log('Login error', error);
     }
   }
+  useEffect(() => {
+    if(!user) return;
+    if(token) return;
+    handleLogin();
+  }, [user]);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Login</Text>
-        <View style={styles.input}>
-          <Icon name="user" size={16} />
-          <TextInput
-            placeholder="Username"
-            style={styles.inputField}
-            value={username}
-            onChangeText={setUsernameInput}
-          />
-        </View>
-        <View style={styles.input}>
-          <Icon name="lock" size={15} />
-          <TextInput
-            placeholder="Password"
-            value={password}
-            style={styles.inputField}
-            secureTextEntry={true}
-            onChangeText={setPassword} 
-          />
-        </View>
-        <TouchableOpacity 
-          onPress={login}
+        <Text style={styles.title}>Vehicle App</Text>
+        <Text style={styles.subtitle}>Please log in to continue</Text>
+        <TouchableOpacity
           style={styles.button}
+          onPress={login}
         >
-          <Text style={styles.buttonTxt}>Login</Text>
-        </TouchableOpacity> 
+          <Text style={styles.buttonTxt}>Login with Auth0</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   )
 }
-// styling, outsise the component!
+
 const styles = StyleSheet.create({
   container: {
     flex: 1, 
@@ -129,28 +123,20 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28, 
-    fontWeight: '500', 
-    marginBottom: 30, 
+    fontWeight: '700',
+    marginBottom: 8, 
+    alignSelf: 'center'
   },
-  inputField: {
-    flex: 1, 
-    paddingVertical: 0, 
-    fontSize: 15, 
-    marginLeft: 2
-  },
-  input: {
-    flexDirection: 'row', 
-    padding: 8, 
-    marginBottom: 25, 
-    borderBottomColor: '#808080', 
-    borderBottomWidth: 1,
-    alignItems: 'center',
+  subtitle: {
+    fontSize: theme.fontSize.subtitle,
+    marginBottom: 30,
+    alignSelf: 'center'
   },
   button: {
     backgroundColor: theme.colors.button, 
     padding: 15, 
     borderRadius: theme.borderRadius.button, 
-    marginBottom: 30
+    marginBottom: 20
   },
   buttonTxt: {
     textAlign: 'center', 
