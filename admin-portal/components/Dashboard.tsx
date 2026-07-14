@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [profile, setProfile] = useState(false);
   const {getAccessTokenSilently, user} = useAuth0();
   const {profileImage} = useImage();
+  const [loading, setLoading] = useState(true);
 
   const fetchVehicles = async () => {
     try {
@@ -32,6 +33,8 @@ export default function Dashboard() {
       setVehicles(data);
     } catch (error) {
       console.log('Error fetching vehicles', error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -51,8 +54,13 @@ export default function Dashboard() {
       </header>
       <main className={styles.main}>
         <div className={styles.tableContainer}>
-          {vehicles.length === 0 ? (
-            <p className={styles.placeholder}>No vehicles added yet.</p>
+          {loading ? (
+            <div className={styles.spinnerContainer}>
+              <div className="spinner"></div>
+                <p>Loading...</p>
+            </div>
+          ) : vehicles.length === 0 ? (
+            <p className={styles.placeholder}>No vehicles added yet.</p>            
           ) : (
             <table className={styles.table}>
               <thead>

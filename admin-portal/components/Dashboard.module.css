@@ -96,3 +96,12 @@
   color: #888;
   padding: 20px;
 }
+.spinnerContainer {
+  padding: 48px;
+}
+.spinnerContainer p {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 17px;
+  font-weight: 600;
+}

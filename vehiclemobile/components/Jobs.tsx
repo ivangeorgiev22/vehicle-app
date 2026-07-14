@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/SimpleLineIcons";
 import User from 'react-native-vector-icons/Feather';
 import { theme } from "../theme";
+import { ActivityIndicator } from "react-native";
 
 interface Job {
   id: string;
@@ -24,6 +25,7 @@ export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
   const {token, logout} = useAuth();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const webSocket = new WebSocket(WEBSOCKET_URL);
@@ -41,6 +43,7 @@ export default function Jobs() {
       }
       if(data.type === 'jobs:backlog') {
         setJobs(data.jobs);
+        setLoading(false);
       }
     };
     webSocket.onerror = (error) => {
@@ -70,23 +73,27 @@ export default function Jobs() {
           </View>
         </Pressable>
       </View>
-      <FlatList 
-        data={jobs} 
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{padding: 15}}
-        renderItem={({item}) => (
-          <Pressable onPress={() => navigation.navigate('Job Details', {id: item.id})}>
-            <View style={styles.jobItem}>
-              <View style={styles.label} />
-              <View style={styles.jobInfo}>
-                <Text style={styles.jobTitle}>{item.title}</Text>
-                <Text style={styles.vehicle}>Vehicle Reg: {item.vehicle.plate}</Text>
+      {loading ? (
+        <ActivityIndicator size='large' color={theme.colors.button} />
+      ) : (
+        <FlatList 
+          data={jobs} 
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{padding: 15}}
+          renderItem={({item}) => (
+            <Pressable onPress={() => navigation.navigate('Job Details', {id: item.id})}>
+              <View style={styles.jobItem}>
+                <View style={styles.label} />
+                <View style={styles.jobInfo}>
+                  <Text style={styles.jobTitle}>{item.title}</Text>
+                  <Text style={styles.vehicle}>Vehicle Reg: {item.vehicle.plate}</Text>
+                </View>
+                <Icon name="arrow-right" size={15} />
               </View>
-              <Icon name="arrow-right" size={15} />
-            </View>
-          </Pressable>
-        )} 
-      />
+            </Pressable>
+          )} 
+        />
+      )}
     </SafeAreaView>
   )
 }

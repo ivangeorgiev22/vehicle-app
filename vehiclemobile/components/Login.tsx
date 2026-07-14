@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -9,11 +9,13 @@ import { API_URL } from "@env";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { theme } from "../theme";
 import { useAuth0 } from "react-native-auth0";
+import { ActivityIndicator } from "react-native";
 
 export default function Login () {
   const { setUsername, setToken, setUserId, setImage, token } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
   const {authorize, user, getCredentials} = useAuth0();
+  const [loading, setLoading] = useState(false);
 
   const getImage = async (userId: string, token: string) => {
     try {
@@ -70,12 +72,15 @@ export default function Login () {
 
   const login = async () => {
     try {
+      setLoading(true);
       await authorize({
         scope: 'openid profile email',
         audience: 'https://vehicle-app-api',
       });
     } catch (error) {
       console.log('Login error', error);
+    } finally {
+      setLoading(false);
     }
   }
   useEffect(() => {
@@ -89,12 +94,16 @@ export default function Login () {
       <View style={styles.card}>
         <Text style={styles.title}>Vehicle App</Text>
         <Text style={styles.subtitle}>Please log in to continue</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={login}
-        >
-          <Text style={styles.buttonTxt}>Login with Auth0</Text>
-        </TouchableOpacity>
+        {loading ? (
+          <ActivityIndicator size='large' color={theme.colors.button} />
+        ) : (
+          <TouchableOpacity
+            style={styles.button}
+            onPress={login}
+          >
+            <Text style={styles.buttonTxt}>Login with Auth0</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   )

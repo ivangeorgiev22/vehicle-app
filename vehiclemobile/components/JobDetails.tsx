@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, StyleSheet, FlatList, Alert, Pressable, Image } from "react-native";
+import { View, Text, StyleSheet, FlatList, Alert, Pressable, Image, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useAuth } from "../context/authContext";
 import { API_URL } from "@env";
@@ -9,6 +9,7 @@ import { Params } from "../navigation/types";
 import User from 'react-native-vector-icons/Feather';
 import { theme } from "../theme";
 import { useFetch } from "../context/useFetch";
+import Icon from 'react-native-vector-icons/Feather';
 
 interface Task {
   key: string;
@@ -23,6 +24,7 @@ export default function JobDetails() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
   const callApi = useFetch();
+  const [loading, setLoading] = useState(true);
 
   const fetchJob = async () => {
     try {
@@ -36,6 +38,8 @@ export default function JobDetails() {
       }
     } catch (error) {
       console.log('Error', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,7 +71,10 @@ export default function JobDetails() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.navLeft}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Icon name="arrow-left" size={24} color='#fff' />
+          </TouchableOpacity>
           <Text style={styles.title}>Tasks</Text>
         </View>
         <Pressable onPress={() => navigation.navigate('Profile', { id: userId })}>
@@ -80,32 +87,36 @@ export default function JobDetails() {
           </View>
         </Pressable>
       </View>
-      <FlatList
-        data={tasks}
-        keyExtractor={(item) => item.key}
-        contentContainerStyle={{padding: 15}}
-        renderItem={({item}) => (
-          <View style={styles.taskItem}>
-            <View style={styles.label} />
-            <View style={styles.taskInfo}>
-              <Text style={styles.taskDesc}>{item.description}</Text>
-              <Text style={styles.taskStatus}>Status: {item.taskStatus}</Text>
+      {loading ? (
+        <ActivityIndicator size='large' color={theme.colors.button} />
+      ) : (
+        <FlatList
+          data={tasks}
+          keyExtractor={(item) => item.key}
+          contentContainerStyle={{padding: 15}}
+          renderItem={({item}) => (
+            <View style={styles.taskItem}>
+              <View style={styles.label} />
+              <View style={styles.taskInfo}>
+                <Text style={styles.taskDesc}>{item.description}</Text>
+                <Text style={styles.taskStatus}>Status: {item.taskStatus}</Text>
+              </View>
+  
+              {item.taskStatus === 'Waiting' && (
+                <Pressable onPress={() => updateTaskStatus(item.key, 'Accepted')} style={styles.acceptButton}>
+                  <Text style={styles.buttonTxt}>Accept</Text>
+                </Pressable>
+              )}
+  
+              {item.taskStatus === 'Accepted' && (
+                <Pressable onPress={() => updateTaskStatus(item.key, 'Completed')} style={styles.completeButton}>
+                  <Text style={styles.buttonTxt}>Complete</Text>
+                </Pressable>
+              )}
             </View>
-
-            {item.taskStatus === 'Waiting' && (
-              <Pressable onPress={() => updateTaskStatus(item.key, 'Accepted')} style={styles.acceptButton}>
-                <Text style={styles.buttonTxt}>Accept</Text>
-              </Pressable>
-            )}
-
-            {item.taskStatus === 'Accepted' && (
-              <Pressable onPress={() => updateTaskStatus(item.key, 'Completed')} style={styles.completeButton}>
-                <Text style={styles.buttonTxt}>Complete</Text>
-              </Pressable>
-            )}
-          </View>
-        )}
-      />
+          )}
+        />
+      )}
     </SafeAreaView>
   )
 }
@@ -186,5 +197,10 @@ const styles = StyleSheet.create({
     width: theme.avatar.size,
     height: theme.avatar.size,
     borderRadius: theme.borderRadius.avatar,
+  },
+  navLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12
   }
 })

@@ -84,7 +84,7 @@ export default function Home() {
             <h1>Admin Portal</h1>
             <p>Vehicle App</p>
           </div>
-          <p className={styles.loadingTxt}>Loading...</p>
+          <div className="spinner"></div>
         </div>
       </div>
     )
