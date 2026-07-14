@@ -14,6 +14,9 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { emailTemplate } from '../templates/email-template';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -411,6 +414,51 @@ export class VehicleAppStack extends Stack {
     }
     generateRoutes(coreResource, apiEndpoints, coreIntegration);
     generateRoutes(restApi.root, entryApiEndpoints, entryIntegration);
+
+    const adminPortalBucket = new s3.Bucket(this, 'AdminPortalBucket', {
+      bucketName: `admin-portal-bucket-${env}`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    const adminPortalOAC = new cloudfront.S3OriginAccessControl(this, 'AdminPortalOAC', {
+      signing: cloudfront.Signing.SIGV4_NO_OVERRIDE
+    });
+
+    const adminPortalDistribution = new cloudfront.Distribution(this, 'AdminPortalDistribution', {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(adminPortalBucket, {
+          originAccessControl: adminPortalOAC
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED
+      },
+      defaultRootObject: 'index.html',
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html'
+        },
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html'
+        }
+      ]
+    });
+
+    new s3deploy.BucketDeployment(this, 'AdminPortalDeployment', {
+      sources: [s3deploy.Source.asset(path.join(__dirname, '../../admin-portal/out'))],
+      destinationBucket: adminPortalBucket,
+      distribution: adminPortalDistribution,
+      distributionPaths: ['/*']
+    });
+
+    new CfnOutput(this, 'AdminPortalUrl', {
+      value: `https://${adminPortalDistribution.distributionDomainName}`,
+      description: 'Admin Portal URL'
+    });
 
     new CfnOutput(this, 'ApiUrl', {
       value: restApi.url.replace(/\/$/, ''),
