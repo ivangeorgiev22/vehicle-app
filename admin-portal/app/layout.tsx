@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Auth0ProviderWrapper from "@/components/Auth0Provider";
+import Auth0ProviderWrapper from "@/auth/Auth0Provider"
 import { ImageProvider } from "@/context/imageContext";
 
 

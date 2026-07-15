@@ -1,12 +1,34 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
-import axios from "axios";
 
 const dynamoDb = DynamoDBDocumentClient.from(new DynamoDBClient());
 
 export const handler = async (event: any) => {
-  const jobs = await axios.get(`${process.env.BASE_URL}/api/jobs`);
+  const getJobs = await dynamoDb.send(new ScanCommand({
+    TableName: process.env.JOBS_TABLE,
+    FilterExpression: 'jobStatus = :status',
+    ExpressionAttributeValues: {
+      ':status': 'Backlog'
+    }
+  }));
+
+  const jobs = await Promise.all(
+    (getJobs.Items || []).map(async (job) => {
+      const tasks = typeof job.tasks === 'string' ? JSON.parse(job.tasks) : job.tasks;
+      if (!job.vehicleId) return {...job, tasks, vehicle: null};
+      const vehicle = await dynamoDb.send(new GetCommand({
+        TableName: process.env.VEHICLES_TABLE,
+        Key: {id: job.vehicleId}
+      }));
+      return {
+        ...job,
+        tasks,
+        vehicle: {plate: vehicle.Item?.plate || null}
+      };
+    })
+  );
+
   const connections = await dynamoDb.send(new ScanCommand({
     TableName: process.env.CONNECTIONS_TABLE
   }));
@@ -17,7 +39,7 @@ export const handler = async (event: any) => {
       try {
         await apiClient.send(new PostToConnectionCommand({
           ConnectionId: connection.connectionId,
-          Data: JSON.stringify({type: 'jobs:backlog', jobs: jobs.data})
+          Data: JSON.stringify({type: 'jobs:backlog', jobs})
         }));
       } catch (error) {
         await dynamoDb.send(new DeleteCommand({

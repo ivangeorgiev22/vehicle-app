@@ -66,6 +66,7 @@ export default function CreateMissionForm({onClose, vehicles, onMissionCreated}:
               value={selectedVehicle}
               onChange={e => setSelectedVehicle(e.target.value)}
               className={styles.dropdown}
+              required
             >
               <option value="">Select a vehicle</option>
               {vehicles.map(v => (
@@ -79,6 +80,7 @@ export default function CreateMissionForm({onClose, vehicles, onMissionCreated}:
               value={missionType}
               onChange={e => setMissionType(e.target.value)}
               className={styles.dropdown}
+              required
             >
               <option value="">Select mission type</option>
               <option value="Cleaning">Cleaning</option>

@@ -283,13 +283,16 @@ export class VehicleAppStack extends Stack {
       logGroup: broadcastJobsLogs,
       environment: {
         NODE_ENV: env,
-        BASE_URL: apiUrl,
         CONNECTIONS_TABLE: connectionsTable.tableName,
-        WEBSOCKET_ENDPOINT: webSocketUrl
+        WEBSOCKET_ENDPOINT: webSocketUrl,
+        VEHICLES_TABLE: vehiclesTable.tableName,
+        JOBS_TABLE: jobsTable.tableName
       }
     });
     connectionsTable.grantReadWriteData(broadcastJobsLambda);
     webSocketApi.grantManageConnections(broadcastJobsLambda);
+    jobsTable.grantReadWriteData(broadcastJobsLambda);
+    vehiclesTable.grantReadWriteData(broadcastJobsLambda);
 
     const createMissionTask = new tasks.LambdaInvoke(this, 'CreateMission', {
       lambdaFunction: createMissionLambda,
