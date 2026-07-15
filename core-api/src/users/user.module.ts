@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { UsersController } from "./user.controller";
-import { UsersService } from "./users.service";
 import { DatabaseModule } from "../database/database.module";
 import { UsersImageService } from "./users-image.service";
 
@@ -8,6 +7,6 @@ import { UsersImageService } from "./users-image.service";
 @Module({
     imports: [DatabaseModule],
     controllers: [UsersController],
-    providers: [UsersService, UsersImageService]
+    providers: [UsersImageService]
 })
 export class UsersModule {}
