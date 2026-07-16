@@ -85,6 +85,22 @@ export class VehicleAppStack extends Stack {
       ]
     });
 
+    const imageOAC = new cloudfront.S3OriginAccessControl(this, 'ImagesOAC', {
+      signing: cloudfront.Signing.SIGV4_NO_OVERRIDE
+    });
+
+    const imagesDistribution = new cloudfront.Distribution(this, 'ImagesDistribution', {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(imagesBucket, {
+          originAccessControl: imageOAC
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED
+      }
+    });
+
+    const imagesUrl = `https://${imagesDistribution.distributionDomainName}`;
+
     // API Gateway
     const restApi = new apigateway.RestApi(this, 'VehicleAppApi', {
       restApiName: `vehicle-app-${env}`,
@@ -168,7 +184,9 @@ export class VehicleAppStack extends Stack {
         USERS_TABLE: usersTable.tableName,
         MISSIONS_TABLE: missionsTable.tableName,
         JOBS_TABLE: jobsTable.tableName,
-        VEHICLES_TABLE: vehiclesTable.tableName
+        VEHICLES_TABLE: vehiclesTable.tableName,
+        IMAGES_URL: imagesUrl,
+        CLOUDFRONT_DISTRIBUTION_ID: imagesDistribution.distributionId
       }
     });
 
@@ -177,6 +195,10 @@ export class VehicleAppStack extends Stack {
     jobsTable.grantReadWriteData(coreApiLambda);
     imagesBucket.grantReadWrite(coreApiLambda);
     vehiclesTable.grantReadWriteData(coreApiLambda);
+    coreApiLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cloudfront:CreateInvalidation'],
+      resources: [`arn:aws:cloudfront::${this.account}:distribution/${imagesDistribution.distributionId}`]
+    }));
 
     const entryApiLogGroup = new logs.LogGroup(this, 'EntryApiLogGroup', {
       logGroupName: `entry-api-lambda-logs-${env}`,
@@ -472,6 +494,11 @@ export class VehicleAppStack extends Stack {
     new CfnOutput(this, 'WebSocketUrl', {
       value: webSocketStage.url,
       description: 'WebSocket URL'
+    });
+
+    new CfnOutput(this, 'ImagesUrl', {
+      value: imagesUrl,
+      description: 'Images URL'
     });
   }
 }

@@ -18,6 +18,7 @@ interface Vehicle {
 export default function Dashboard() {
   const {isAuthenticated, isLoading, user, getAccessTokenSilently} = useAuth0();
   const {profileImage, setProfileImage} = useImage();
+  console.log('profileImage in dashboard:', profileImage?.substring(0, 50))
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [addVehicleForm, setAddVehicleForm] = useState(false);
   const [createMissionForm, setCreateMissionForm] = useState(false);
@@ -95,7 +96,7 @@ export default function Dashboard() {
         <h1>Dashboard</h1>
         <div className={styles.headerRight}>
           {user?.picture && (
-            <img src={profileImage || user?.picture || ''} alt="avatar" className={styles.avatar} onClick={() => setProfile(true)} />
+            <img src={profileImage || user?.picture || ''} alt="avatar" className={styles.avatar} key={profileImage} onClick={() => setProfile(true)} />
           )}
         </div>
       </header>

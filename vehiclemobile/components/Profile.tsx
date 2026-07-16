@@ -41,15 +41,17 @@ export default function Profile() {
 
       if (result.ok) {
         const data = await result.json();
-        const imageRes = await fetch(data.imageUrl);
-        const blob = await imageRes.blob();
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result as string;
-          setImage(base64);
-        };
-        reader.readAsDataURL(blob)
         Alert.alert('Image uploaded successully');
+        setTimeout(async () => {
+          const imageRes = await fetch(data.imageUrl);
+          const blob = await imageRes.blob();
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = reader.result as string;
+            setImage(base64);
+          };
+          reader.readAsDataURL(blob)
+        }, 26000);
       } else {
         Alert.alert('Failed to upload image')
       }
