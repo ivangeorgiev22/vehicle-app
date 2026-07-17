@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import styles from '@/components/AddVehicleForm.module.css';
 import { MdClose } from "react-icons/md";
+import {toast} from 'react-toastify';
+import { handleErrors } from "@/utils/errorHandler";
 
 interface AddVehicleFormProps {
   onClose: () => void;
@@ -29,15 +31,17 @@ export default function AddVehicleForm({onClose, onVehicleAdded}: AddVehicleForm
       });
 
       if(res.ok) {
+        toast.success('Vehicle Added Successfully');
         setPlate('');
         setBattery('');
         onVehicleAdded();
         onClose();
       } else {
-        alert('Failed to add vehicle');
+        handleErrors(res.status);
       }
     } catch (error) {
-      console.log('Error adding vehicle', error);
+      console.error('Failed to add vehicle', error);
+      toast.error('Connection error.Please try again later');
     }
   }
 
@@ -62,16 +66,20 @@ export default function AddVehicleForm({onClose, onVehicleAdded}: AddVehicleForm
               onChange={e => setPlate(e.target.value)}
               placeholder="Enter vehicle reg"
               className={styles.input}
+              required
             />
           </div>
           <div>
             <label className={styles.label}>Battery</label>
             <input 
-              type="text"
+              type="number"
+              min='0'
+              max='100'
               value={battery}
               onChange={e => setBattery(e.target.value)}
               placeholder="Battery Level"
               className={styles.input}
+              required
             />
           </div>
           <button type="submit" className={styles.button}>Add</button>

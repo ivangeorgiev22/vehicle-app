@@ -14,6 +14,9 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { emailTemplate } from '../templates/email-template';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 
 export class VehicleAppStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -81,6 +84,22 @@ export class VehicleAppStack extends Stack {
         }
       ]
     });
+
+    const imageOAC = new cloudfront.S3OriginAccessControl(this, 'ImagesOAC', {
+      signing: cloudfront.Signing.SIGV4_NO_OVERRIDE
+    });
+
+    const imagesDistribution = new cloudfront.Distribution(this, 'ImagesDistribution', {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(imagesBucket, {
+          originAccessControl: imageOAC
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED
+      }
+    });
+
+    const imagesUrl = `https://${imagesDistribution.distributionDomainName}`;
 
     // API Gateway
     const restApi = new apigateway.RestApi(this, 'VehicleAppApi', {
@@ -165,7 +184,9 @@ export class VehicleAppStack extends Stack {
         USERS_TABLE: usersTable.tableName,
         MISSIONS_TABLE: missionsTable.tableName,
         JOBS_TABLE: jobsTable.tableName,
-        VEHICLES_TABLE: vehiclesTable.tableName
+        VEHICLES_TABLE: vehiclesTable.tableName,
+        IMAGES_URL: imagesUrl,
+        CLOUDFRONT_DISTRIBUTION_ID: imagesDistribution.distributionId
       }
     });
 
@@ -174,6 +195,10 @@ export class VehicleAppStack extends Stack {
     jobsTable.grantReadWriteData(coreApiLambda);
     imagesBucket.grantReadWrite(coreApiLambda);
     vehiclesTable.grantReadWriteData(coreApiLambda);
+    coreApiLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cloudfront:CreateInvalidation'],
+      resources: [`arn:aws:cloudfront::${this.account}:distribution/${imagesDistribution.distributionId}`]
+    }));
 
     const entryApiLogGroup = new logs.LogGroup(this, 'EntryApiLogGroup', {
       logGroupName: `entry-api-lambda-logs-${env}`,
@@ -196,7 +221,8 @@ export class VehicleAppStack extends Stack {
         JOBS_TABLE: jobsTable.tableName,
         WEBSOCKET_ENDPOINT: webSocketUrl,
         AUTH0_DOMAIN: process.env.AUTH0_DOMAIN || '',
-        AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE || ''
+        AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE || '',
+        AUTH0_NAMESPACE: process.env.AUTH0_NAMESPACE || ''
       }
     });
 
@@ -279,13 +305,16 @@ export class VehicleAppStack extends Stack {
       logGroup: broadcastJobsLogs,
       environment: {
         NODE_ENV: env,
-        BASE_URL: apiUrl,
         CONNECTIONS_TABLE: connectionsTable.tableName,
-        WEBSOCKET_ENDPOINT: webSocketUrl
+        WEBSOCKET_ENDPOINT: webSocketUrl,
+        VEHICLES_TABLE: vehiclesTable.tableName,
+        JOBS_TABLE: jobsTable.tableName
       }
     });
     connectionsTable.grantReadWriteData(broadcastJobsLambda);
     webSocketApi.grantManageConnections(broadcastJobsLambda);
+    jobsTable.grantReadWriteData(broadcastJobsLambda);
+    vehiclesTable.grantReadWriteData(broadcastJobsLambda);
 
     const createMissionTask = new tasks.LambdaInvoke(this, 'CreateMission', {
       lambdaFunction: createMissionLambda,
@@ -412,6 +441,51 @@ export class VehicleAppStack extends Stack {
     generateRoutes(coreResource, apiEndpoints, coreIntegration);
     generateRoutes(restApi.root, entryApiEndpoints, entryIntegration);
 
+    const adminPortalBucket = new s3.Bucket(this, 'AdminPortalBucket', {
+      bucketName: `admin-portal-bucket-${env}`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    const adminPortalOAC = new cloudfront.S3OriginAccessControl(this, 'AdminPortalOAC', {
+      signing: cloudfront.Signing.SIGV4_NO_OVERRIDE
+    });
+
+    const adminPortalDistribution = new cloudfront.Distribution(this, 'AdminPortalDistribution', {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(adminPortalBucket, {
+          originAccessControl: adminPortalOAC
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED
+      },
+      defaultRootObject: 'index.html',
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html'
+        },
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html'
+        }
+      ]
+    });
+
+    new s3deploy.BucketDeployment(this, 'AdminPortalDeployment', {
+      sources: [s3deploy.Source.asset(path.join(__dirname, '../../admin-portal/out'))],
+      destinationBucket: adminPortalBucket,
+      distribution: adminPortalDistribution,
+      distributionPaths: ['/*']
+    });
+
+    new CfnOutput(this, 'AdminPortalUrl', {
+      value: `https://${adminPortalDistribution.distributionDomainName}`,
+      description: 'Admin Portal URL'
+    });
+
     new CfnOutput(this, 'ApiUrl', {
       value: restApi.url.replace(/\/$/, ''),
       description: 'API Gateway URL'
@@ -420,6 +494,11 @@ export class VehicleAppStack extends Stack {
     new CfnOutput(this, 'WebSocketUrl', {
       value: webSocketStage.url,
       description: 'WebSocket URL'
+    });
+
+    new CfnOutput(this, 'ImagesUrl', {
+      value: imagesUrl,
+      description: 'Images URL'
     });
   }
 }

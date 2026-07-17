@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Params } from "../navigation/types";
 import { useAuth } from "../context/authContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_URL } from "@env";
+import { API_URL, AUTH0_AUDIENCE, AUTH0_NAMESPACE } from "@env";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { theme } from "../theme";
 import { useAuth0 } from "react-native-auth0";
@@ -75,7 +75,7 @@ export default function Login () {
       setLoading(true);
       await authorize({
         scope: 'openid profile email',
-        audience: 'https://vehicle-app-api',
+        audience: AUTH0_AUDIENCE,
       });
     } catch (error) {
       console.log('Login error', error);

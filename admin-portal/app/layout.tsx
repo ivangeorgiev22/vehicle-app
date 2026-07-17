@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Auth0ProviderWrapper from "@/components/Auth0Provider";
+import Auth0ProviderWrapper from "@/auth/Auth0Provider"
 import { ImageProvider } from "@/context/imageContext";
+import { ToastContainer } from "react-toastify";
 
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
         <Auth0ProviderWrapper>
           <ImageProvider>
            {children}
+           <ToastContainer position="top-center" autoClose={4000} />
           </ImageProvider>
         </Auth0ProviderWrapper>
       </body>

@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -85,7 +86,7 @@ android {
         versionCode 1
         versionName "1.0"
         manifestPlaceholders = [
-            auth0Domain: "dev-zpvvcgvlgkebs33f.us.auth0.com",
+            auth0Domain: project.env.get("AUTH0_DOMAIN"),
             auth0Scheme: "${applicationId}.auth0"
         ]
     }

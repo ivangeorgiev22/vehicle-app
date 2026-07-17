@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import styles from '@/components/CreateMissionForm.module.css';
 import { MdClose } from "react-icons/md";
+import { toast } from "react-toastify";
+import { handleErrors } from "@/utils/errorHandler";
 
 interface Vehicle {
   id: string;
@@ -21,8 +23,6 @@ export default function CreateMissionForm({onClose, vehicles, onMissionCreated}:
 
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    if (!selectedVehicle || !missionType) return;
-
     try {
       const token = await getAccessTokenSilently();
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/missions`, {
@@ -35,15 +35,17 @@ export default function CreateMissionForm({onClose, vehicles, onMissionCreated}:
       });
 
       if(res.ok) {
+        toast.success('Mission Created Successfully');
         setMissionType('');
         setSelectedVehicle('');
         onMissionCreated();
         onClose();
       } else {
-        alert(`Error: ${res.status}`)
+        handleErrors(res.status);
       }
     } catch (error) {
-      console.log('Error creating mission', error);
+      console.error('Error Creating Mission', error);
+      toast.error('Connection error.Please try again later.');
     }
   }
 
@@ -66,6 +68,7 @@ export default function CreateMissionForm({onClose, vehicles, onMissionCreated}:
               value={selectedVehicle}
               onChange={e => setSelectedVehicle(e.target.value)}
               className={styles.dropdown}
+              required
             >
               <option value="">Select a vehicle</option>
               {vehicles.map(v => (
@@ -79,6 +82,7 @@ export default function CreateMissionForm({onClose, vehicles, onMissionCreated}:
               value={missionType}
               onChange={e => setMissionType(e.target.value)}
               className={styles.dropdown}
+              required
             >
               <option value="">Select mission type</option>
               <option value="Cleaning">Cleaning</option>
