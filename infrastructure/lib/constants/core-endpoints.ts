@@ -10,10 +10,6 @@ export const apiEndpoints: ApiEndpoint[] = [
         httpMethods: ['POST'],
         subEndpoints: [
             {
-                endpointUrl: 'validate',
-                httpMethods: ['POST'],
-            },
-            {
                 endpointUrl: '{id}',
                 subEndpoints: [
                     {

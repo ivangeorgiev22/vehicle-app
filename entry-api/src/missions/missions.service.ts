@@ -16,7 +16,6 @@ export class MissionsService {
       stateMachineArn: process.env.STATE_MACHINE_ARN,
       input: JSON.stringify({type: req.type, vehicleId: req.vehicleId})
     }));
-    await this.jobsGateway.broadcastJobs();
   }
 
   findOne(id: string): Promise<MissionWithJobs> {

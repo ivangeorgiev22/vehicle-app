@@ -1,0 +1,56 @@
+.container {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.form {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  width: 400px;
+}
+.inputContainer {
+  margin-bottom: 16px;
+}
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+}
+.dropdown {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.button {
+  width: 100%;
+  background-color: #1a1a2e;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.closeBtn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 25px;
+}

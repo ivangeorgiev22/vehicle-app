@@ -2,15 +2,6 @@ import { type ApiEndpoint } from './core-endpoints';
 
 export const entryApiEndpoints: ApiEndpoint[] = [
     {
-        endpointUrl: 'auth',
-        subEndpoints: [
-            {
-                endpointUrl: 'login',
-                httpMethods: ['POST']
-            }
-        ]
-    },
-    {
         endpointUrl: 'missions',
         httpMethods: ['POST'],
         subEndpoints: [

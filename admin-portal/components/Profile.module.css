@@ -1,0 +1,69 @@
+.container {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.form {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  width: 400px;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.avatar p {
+  font-size: 20px;
+  font-weight: 600;
+}
+.img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+}
+.buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+.uploadBtn {
+  border-radius: 10px;
+  border: none;
+  background-color: #1a1a2e;
+  color: white;
+  font-weight: 600;
+  width: 60%;
+  padding: 12px;
+  cursor: pointer;
+}
+.logoutBtn {
+  border-radius: 10px;
+  border: none;
+  background-color: red;
+  color: white;
+  font-weight: 600;
+  width: 60%;
+  padding: 12px;
+  cursor: pointer;
+
+}
+.closeBtn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 25px;
+}

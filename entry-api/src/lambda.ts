@@ -5,7 +5,13 @@ import ServerlessHttp from "serverless-http";
 let handler: any;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    cors: {
+      origin: '*',
+      methods: 'GET,PUT,PATCH,POST,DELETE,OPTIONS,HEAD',
+      allowedHeaders: 'Content-Type,Authorization'
+    }
+  });
   await app.init();
   return ServerlessHttp(app.getHttpAdapter().getInstance());
 }

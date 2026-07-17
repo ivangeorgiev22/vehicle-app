@@ -11,7 +11,7 @@ import { theme } from "../theme";
 import { useAuth0 } from "react-native-auth0";
 
 export default function Login () {
-  const { setUsername, setToken, setIsAdmin, setUserId, setImage, token } = useAuth();
+  const { setUsername, setToken, setUserId, setImage, token } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<Params>>();
   const {authorize, user, getCredentials} = useAuth0();
 
@@ -45,14 +45,11 @@ export default function Login () {
       if (!credentials) return;
 
       const token = credentials.accessToken;
-      const rolesClaim = `${AUTH0_NAMESPACE}/roles`
-      const isAdmin = ((user as any)[rolesClaim] as string[] || []).includes('ADMIN');
       const userId = user?.sub || '';
       const username = user?.name || '';
       const picture = user?.picture || '';
 
       setToken(token);
-      setIsAdmin(isAdmin);
       setUsername(username);
       setUserId(userId);
       setImage(picture);
@@ -60,17 +57,12 @@ export default function Login () {
 
       await AsyncStorage.setItem('session', JSON.stringify({
         token,
-        isAdmin,
         username,
         userId,
         image: picture
       }));
 
-      if(isAdmin) {
-        navigation.navigate('Home');
-      } else {
-        navigation.navigate('Jobs');
-      }
+      navigation.navigate('Jobs');
     } catch (error) {
       console.log('Error handling login', error);
     }
