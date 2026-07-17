@@ -7,6 +7,8 @@ import CreateMissionForm from "@/components/CreateMissionForm";
 import Profile from "@/components/Profile";
 import { useImage } from "@/context/imageContext";
 import { redirect } from "next/navigation";
+import { handleErrors } from "@/utils/errorHandler";
+import { toast } from "react-toastify";
 
 interface Vehicle {
   id: string;
@@ -18,7 +20,6 @@ interface Vehicle {
 export default function Dashboard() {
   const {isAuthenticated, isLoading, user, getAccessTokenSilently} = useAuth0();
   const {profileImage, setProfileImage} = useImage();
-  console.log('profileImage in dashboard:', profileImage?.substring(0, 50))
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [addVehicleForm, setAddVehicleForm] = useState(false);
   const [createMissionForm, setCreateMissionForm] = useState(false);
@@ -54,6 +55,10 @@ export default function Dashboard() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${encodeURIComponent(userId)}/image`, {
         headers: {'Authorization': `Bearer ${token}`}
       });
+      if (!res.ok) {
+        setProfileImage(user?.picture || '');
+        return;
+      }
       const data = await res.json();
 
       if(!data.imageUrl) {
@@ -71,7 +76,7 @@ export default function Dashboard() {
       };
       reader.readAsDataURL(blob)
     } catch (error) {
-      console.log('Error', error);
+      console.error('Image Fetching Failed', error);
     }
   }
 
@@ -81,10 +86,15 @@ export default function Dashboard() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vehicles`, {
         headers: {'Authorization': `Bearer ${token}`}
       });
+      if(!res.ok) {
+        handleErrors(res.status);
+        return;
+      }
       const data = await res.json();
       setVehicles(data);
     } catch (error) {
-      console.log('Error fetching vehicles', error);
+      console.error('Error fetching vehicles', error);
+      toast.error('Failed to load vehicles. Please try again.');
     } finally {
       setLoading(false);
     }

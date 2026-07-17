@@ -4,6 +4,8 @@ import { useRef } from "react";
 import styles from '@/components/Profile.module.css';
 import { MdClose } from "react-icons/md";
 import { useImage } from "@/context/imageContext";
+import { toast } from "react-toastify";
+import { handleErrors } from "@/utils/errorHandler";
 
 interface ProfileProps {
   onClose: () => void;
@@ -30,28 +32,25 @@ export default function Profile({onClose}: ProfileProps) {
 
       if(res.ok) {
         const data = await res.json();
-        alert('Image uploaded successfully');
+        toast.success('Image uploaded successfully.');
         onClose();
         setTimeout(async () => {
           const imgRes = await fetch(data.imageUrl);
-          console.log('imgRes status;', imgRes.status);
-          console.log('imageUrl:', data.imageUrl);
           const blob = await imgRes.blob();
-          console.log('blob size:', blob.size);
           const reader = new FileReader();
           reader.onloadend = () => {
             const base64 = reader.result as string;
-            console.log('base64 set:', base64.substring(0, 50))
             localStorage.setItem('profileImage', base64);
             setProfileImage(base64);
           };
           reader.readAsDataURL(blob);
-        }, 26000)
+        }, 45000)
       } else {
-        alert('Failed to upload image');
+        handleErrors(res.status);
       }
     } catch (error) {
-      console.log('Error uploading image', error);
+      console.error('Error uploading image', error);
+      toast.error('Connection Error.Please try again later.')
     }
   }
 
