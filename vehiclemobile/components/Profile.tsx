@@ -7,6 +7,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { theme } from "../theme";
 import { useFetch } from "../context/useFetch";
 import { useAuth0 } from "react-native-auth0";
+import Icon from 'react-native-vector-icons/Feather';
+import { ActivityIndicator } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Profile() {
   const {token, username, image, setImage, logout} = useAuth();
@@ -14,6 +17,7 @@ export default function Profile() {
   const {id} = route.params as {id: string};
   const callApi = useFetch();
   const {clearSession} = useAuth0();
+  const navigation = useNavigation();
 
 
   const uploadImage = async () => {
@@ -73,6 +77,9 @@ export default function Profile() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Icon name="arrow-left" size={24} color='#fff' />
+        </TouchableOpacity>
         <View>
           <Text style={styles.headerTitle}>Profile</Text>
           <Text style={styles.headerUsername}>{username}</Text>
@@ -112,6 +119,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.header,
     paddingHorizontal: theme.spacing.horizontal,
     paddingVertical: theme.spacing.vertical,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12
   },
   headerTitle: {
     color: theme.colors.text,
